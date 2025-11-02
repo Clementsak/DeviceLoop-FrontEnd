@@ -1,168 +1,61 @@
-/* Tailwind layers */
+/* index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- Base layer: global look and feel ---------- */
+/* ========= Base (Light theme) ========= */
 @layer base {
   :root {
-    /* motion + focus */
-    scroll-behavior: smooth;
+    --bg:        #f3f8f5;    /* light mint */
+    --surface:   #ffffff;    /* cards/nav */
+    --border:    #d6e3db;
+    --text:      #000000;    /* main body text (very dark green) */
+    --muted:     #000000;    /* secondary text */
+    --primary:   #1f8a5b;    /* buttons/links */
+    --primary-600:#18754c;
+    --primary-700:#135e3e;
+    --chip:      #e7f3ed;
   }
 
-  html, body, #root {
-    @apply h-full;
+  html, body {
+    @apply bg-[var(--bg)] text-[color:var(--text)];
   }
 
-  body {
-    /* light mode default */
-    @apply bg-zinc-50 text-zinc-900 antialiased;
-  }
-
-  /* optional dark theme toggle via class="dark" on <html> */
-  .dark body {
-    @apply bg-[#0b0f15] text-zinc-100;
-  }
-
-  /* fonts feel crisper */
-  * {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  /* selection color */
-  ::selection {
-    @apply bg-amber-300/60 text-zinc-900;
-  }
-
-  /* subtle link style */
   a {
-    @apply underline decoration-transparent hover:decoration-current underline-offset-4 transition-colors;
+    color: var(--primary-700);
   }
 }
 
-/* ---------- Components layer: reusable primitives ---------- */
+/* ========= Components ========= */
 @layer components {
-  /* page container */
-  .dl-container {
-    @apply mx-auto w-full max-w-6xl px-4;
+  .card   { @apply bg-[var(--surface)] border border-[var(--border)] rounded-2xl; }
+  .muted  { color: var(--muted); }
+.btn {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2
+           font-semibold transition;
+    color: #000;                /* text always black */
   }
 
-  /* section spacing helpers */
-  .dl-section {
-    @apply dl-container py-10 md:py-14;
-  }
-
-  /* card */
-  .dl-card {
-    @apply rounded-2xl border border-black/5 bg-white shadow-sm;
-  }
-  .dark .dl-card {
-    @apply border-white/10 bg-white/5 shadow-none;
-  }
-
-  /* buttons */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition
-           disabled:opacity-50 disabled:cursor-not-allowed;
-  }
+  /* Primary (green) */
   .btn-primary {
-    @apply btn bg-black text-white hover:bg-black/90;
+    @apply btn;
+    background: #1f8a5b;        /* your green */
   }
-  .dark .btn-primary {
-    @apply bg-white text-black hover:bg-white/90;
-  }
-  .btn-outline {
-    @apply btn border border-black/10 hover:bg-black/5;
-  }
-  .dark .btn-outline {
-    @apply border-white/15 hover:bg-white/10;
-  }
+  .btn-primary:hover { background: #18754c; }
+
+  /* Ghost / outline */
   .btn-ghost {
-    @apply btn hover:bg-black/5;
+    @apply btn;
+    background: transparent;
   }
-  .dark .btn-ghost {
-    @apply hover:bg-white/10;
-  }
+  .btn-ghost:hover { background: rgba(0,0,0,0.05); }
 
-  /* inputs */
-  .dl-input {
-    @apply w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none
-           placeholder:text-zinc-400 focus:ring-2 focus:ring-black/20;
+  /* Navbar links */
+  .nav-link { 
+    @apply rounded-xl px-3 py-2 text-sm font-medium;
+    color: #000;
   }
-  .dark .dl-input {
-    @apply border-white/15 bg-white/5 placeholder:text-zinc-500 focus:ring-white/25;
-  }
+  .nav-link:hover { background: rgba(0,0,0,0.05); }
+  .nav-link-active { background: #1f8a5b; }
 
-  .dl-label {
-    @apply mb-1 block text-sm font-medium text-zinc-700;
-  }
-  .dark .dl-label {
-    @apply text-zinc-200;
-  }
-
-  /* badges */
-  .badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium
-           border border-black/10 bg-black/5;
-  }
-  .dark .badge {
-    @apply border-white/15 bg-white/10;
-  }
-
-  /* nav link */
-  .nav-link {
-    @apply rounded-xl px-3 py-2 text-sm hover:bg-black/5;
-  }
-  .dark .nav-link {
-    @apply hover:bg-white/10;
-  }
-  .nav-link-active {
-    @apply bg-black text-white;
-  }
-  .dark .nav-link-active {
-    @apply bg-white text-black;
-  }
-}
-
-/* ---------- Utilities layer: handy one-offs ---------- */
-@layer utilities {
-  /* glass effect for headers/footers */
-  .glass {
-    @apply bg-white/70 backdrop-blur;
-  }
-  .dark .glass {
-    @apply bg-[#0b0f15]/70 backdrop-blur;
-  }
-
-  /* soft shadow alternative */
-  .shadow-soft {
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 40px rgb(0 0 0 / 0.06);
-  }
-
-  /* aspect helpers (cover boxes) */
-  .box {
-    @apply relative overflow-hidden rounded-xl border border-black/10 bg-zinc-100;
-  }
-  .dark .box {
-    @apply border-white/10 bg-white/5;
-  }
-  .box img {
-    @apply absolute inset-0 h-full w-full object-cover;
-  }
-}
-
-/* ---------- Scrollbar polish (Chromium/WebKit) ---------- */
-*::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-*::-webkit-scrollbar-thumb {
-  @apply rounded-lg bg-zinc-400/60 hover:bg-zinc-400/80;
-}
-.dark *::-webkit-scrollbar-thumb {
-  @apply bg-zinc-600/60 hover:bg-zinc-600/80;
-}
-*::-webkit-scrollbar-track {
-  @apply bg-transparent;
 }
