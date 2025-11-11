@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext"; // ← import
 
 export default function Home() {
-  const { user, login, signup } = useAuth();   // ← use auth actions
+  const { me, login, signup } = useAuth();   // ← use auth actions
 
   return (
     <div className="space-y-12">
@@ -22,7 +22,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-3 pt-2">
               <Link to="/" className="btn-primary rounded-xl px-5 py-3">Browse Listings</Link>
 
-              {user ? (
+              {me ? (
                 <Link to="/profile" className="btn-outline rounded-xl px-5 py-3">
                   Go to profile
                 </Link>
@@ -76,7 +76,7 @@ export default function Home() {
             <p className="text-black/70">Create an account to follow sellers, track bids, and receive notifications.</p>
           </div>
           <div className="flex gap-3">
-            {user ? (
+            {me ? (
               <Link to="/profile" className="btn-primary rounded-xl px-5 py-2.5">Profile</Link>
             ) : (
               <>
