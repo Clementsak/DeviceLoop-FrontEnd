@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import {
   type VerifyQueueItem, adminGetVerifyQueue, adminVerifyDecision,
-} from "../api/admin";
+} from "../api/admin/admin";
 
 export default function VerifyQueuePage({ kind }: { kind: "user" | "seller" }) {
   const [rows, setRows] = useState<VerifyQueueItem[]>([]);

@@ -6,7 +6,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import Home from "./components/pages/Home";
 import { AuthProvider } from "./auth/AuthContext";
-import { RequireRole } from "./auth/RequireRole";
+import RequireRole from "./auth/RequireRole";
 
 // (You can replace these with your real modules)
 import AdminApp from "./components/admin/AdminApp";
@@ -33,7 +33,7 @@ const router = createBrowserRouter([
       {
         path: "seller/*",
         element: (
-          <RequireRole role="sellers">
+          <RequireRole roles={["sellers", "admin"]}>
             <SellerApp />
           </RequireRole>
         ),

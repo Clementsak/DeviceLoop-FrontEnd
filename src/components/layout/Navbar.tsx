@@ -42,7 +42,7 @@ export default function Navbar() {
             <span className="text-white/70 text-sm">Checking session…</span>
           ) : me ? (
             <>
-            {me.role === "admin" && (
+              {me.role === "admin" && (
                 <MenuButton label="Admin">
                   <Link className="block px-3 py-2 rounded hover:bg-black/5" to="/admin/users">Users</Link>
                   <Link className="block px-3 py-2 rounded hover:bg-black/5" to="/admin/reviews">Verification reviews</Link>
@@ -50,11 +50,13 @@ export default function Navbar() {
                 </MenuButton>
               )}
 
-              {me.role === "sellers" && (
+              {(me.groups.includes("sellers") || me.groups.includes("admin")) && (
                 <MenuButton label="Seller">
-                  <Link className="block px-3 py-2 rounded hover:bg-black/5" to="/seller/new">New listing</Link>
+                  <Link className="block px-3 py-2 rounded hover:bg-black/5" to="/seller/listings/new">New listing</Link>
                   <Link className="block px-3 py-2 rounded hover:bg-black/5" to="/seller/listings">My listings</Link>
-                  <Link className="block px-3 py-2 rounded hover:bg-black/5" to="/profile">Profile</Link>
+                  <Link className="block px-3 py-2 rounded hover:bg-black/5" to="/seller/orders">Orders</Link>
+                  <Link className="block px-3 py-2 rounded hover:bg-black/5" to="/seller/payouts">Payouts</Link>
+                  <Link className="block px-3 py-2 rounded hover:bg-black/5" to="/seller/settings">Store Settings</Link>
                 </MenuButton>
               )}
 

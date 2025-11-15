@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import {
   type AdminUser, adminListUsers, adminChangeRole, adminDeleteUser,
-} from "../api/admin";
+} from "../api/admin/admin";
 
 type Role = "buyers" | "sellers" | "admin";
 type Verified = "pending" | "verified" | "rejected";

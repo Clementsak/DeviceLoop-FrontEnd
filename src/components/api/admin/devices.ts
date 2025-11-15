@@ -10,38 +10,25 @@ export type DeviceRow = {
   active: boolean;
   isModified: boolean;
   updatedAt?: string | null;
+  storage?: string | null;
+  ram?: string | null;
+  releaseDate?: string | null;   // keep as text (YYYY-MM-DD)
+  releasePrice?: number | null;
 };
 
 export type Paged<T> = { items: T[]; cursor?: string | null };
 
+// ---- utils ----
 function qstr(params: Record<string, string | number | undefined>) {
   const u = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
+  for (const [k, v] of Object.entries(params)) {
     if (v !== undefined && String(v).trim() !== "") u.set(k, String(v));
-  });
+  }
   const s = u.toString();
   return s ? `?${s}` : "";
 }
 
-function buildQuery(params: Record<string, string | number | undefined>) {
-  const qs = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && String(v).trim() !== "") qs.set(k, String(v));
-  }
-  const s = qs.toString();
-  return s ? `?${s}` : "";
-}
-
-async function get<T>(path: string) {
-  const r = await fetch(`${API}${path}`, {
-    credentials: "include",
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-  return (await r.json()) as T;
-}
-
+// ---- GET helpers ----
 async function jsonFetch<T>(
   path: string,
   init: RequestInit & { method: "POST" | "PATCH" | "DELETE" }
@@ -55,25 +42,31 @@ async function jsonFetch<T>(
   return (await r.json()) as T;
 }
 
-// LIST
+// ---- LIST ----
 export async function adminListDevices(params: {
-  category?: string;          // "All" | "Laptop" | ...
+  category: "All" | "Laptop" | "Smartphone" | "Tablet";
   brand?: string;
   q?: string;
-  active?: "all" | "true" | "false";
+  active: "all" | "true" | "false";
   limit?: number;
   cursor?: string | null;
-}): Promise<Paged<DeviceRow>> {
-  const qs = qstr(params as any);
-  const r = await fetch(`${API}/admin/devices${qs}`, {
+}){
+  const sp = new URLSearchParams();
+  sp.set("category", params.category);
+  if (params.brand) sp.set("brand", params.brand);
+  if (params.q) sp.set("q", params.q);
+  sp.set("active", params.active);
+  sp.set("limit", String(params.limit ?? 25));       // ← ensure limit is sent
+  if (params.cursor) sp.set("cursor", params.cursor);
+
+  const res = await fetch(`${API}/admin/devices?${sp.toString()}`, {
     credentials: "include",
-    headers: { Accept: "application/json" },
   });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-  return r.json();
+  if (!res.ok) throw new Error("Failed to load devices");
+  return res.json() as Promise<{ items: DeviceRow[]; cursor?: string | null }>;
 }
 
-export async function adminListBrands(category: "Laptop"|"Smartphone"|"Tablet") {
+export async function adminListBrands(category: "Laptop" | "Smartphone" | "Tablet") {
   const r = await fetch(`${API}/admin/devices/brands?category=${encodeURIComponent(category)}`, {
     credentials: "include",
     headers: { Accept: "application/json" },
@@ -83,7 +76,7 @@ export async function adminListBrands(category: "Laptop"|"Smartphone"|"Tablet") 
   return j.items as string[];
 }
 
-// CREATE
+// ---- CRUD ----
 export async function createDevice(body: {
   category: "Laptop" | "Smartphone" | "Tablet";
   brand: string;
@@ -91,6 +84,10 @@ export async function createDevice(body: {
   variant?: string;
   active?: boolean;
   isModified?: boolean;
+  storage?: string;
+  ram?: string;
+  releaseDate?: string;
+  releasePrice?: number;
 }) {
   return jsonFetch<{ ok: true; device: DeviceRow }>(`/admin/devices`, {
     method: "POST",
@@ -98,7 +95,6 @@ export async function createDevice(body: {
   });
 }
 
-// UPDATE
 export async function updateDevice(
   pk: string,
   body: Partial<{
@@ -108,6 +104,11 @@ export async function updateDevice(
     variant: string | null;
     active: boolean;
     isModified: boolean;
+    storage: string | null;
+    ram: string | null;
+    releaseDate: string | null;
+    releasePrice: number | null;
+
   }>
 ) {
   return jsonFetch<{ ok: true; device: DeviceRow }>(`/admin/devices/${encodeURIComponent(pk)}`, {
@@ -116,7 +117,6 @@ export async function updateDevice(
   });
 }
 
-// TOGGLE ACTIVE
 export async function setDeviceActive(pk: string, active: boolean) {
   return jsonFetch<{ ok: true; pk: string; active: boolean }>(
     `/admin/devices/${encodeURIComponent(pk)}/active`,
@@ -124,7 +124,6 @@ export async function setDeviceActive(pk: string, active: boolean) {
   );
 }
 
-// DELETE (soft by default; add ?hard=true if you want to hard delete)
 export async function deleteDevice(pk: string, hard = false) {
   const q = hard ? "?hard=true" : "";
   return jsonFetch<{ ok: true }>(`/admin/devices/${encodeURIComponent(pk)}${q}`, {
@@ -132,7 +131,7 @@ export async function deleteDevice(pk: string, hard = false) {
   });
 }
 
-// Bulk import upsert
+// ---- Import / Export ----
 export async function adminImportDevices(file: File) {
   const fd = new FormData();
   fd.append("file", file);
@@ -145,58 +144,20 @@ export async function adminImportDevices(file: File) {
   return r.json();
 }
 
-export async function adminExportDevicesTable(params: {
-  category?: "All" | "Laptop" | "Smartphone" | "Tablet";
-  brand?: string;
-  q?: string;
-  active?: "all" | "true" | "false";
-}): Promise<Blob> {
-  const qs = new URLSearchParams();
-  if (params.category) qs.set("category", params.category);
-  if (params.brand)    qs.set("brand", params.brand);
-  if (params.q)        qs.set("q", params.q);
-  if (params.active)   qs.set("active", params.active);
-  const r = await fetch(`${API}/admin/devices/export/table?${qs.toString()}`, {
-    credentials: "include",
-  });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-  return await r.blob();
-}
-
-export async function adminExportDevicesGrouped(params: {
-  category?: "All" | "Laptop" | "Smartphone" | "Tablet";
-  brand?: string;
-  q?: string;
-  active?: "all" | "true" | "false";
-}): Promise<Blob> {
-  const qs = new URLSearchParams();
-  if (params.category) qs.set("category", params.category);
-  if (params.brand)    qs.set("brand", params.brand);
-  if (params.q)        qs.set("q", params.q);
-  if (params.active)   qs.set("active", params.active);
-  const r = await fetch(`${API}/admin/devices/export/grouped?${qs.toString()}`, {
-    credentials: "include",
-  });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-  return await r.blob();
-}
-
 export async function exportTableXlsx(params: {
-  category?: string; brand?: string; q?: string;
-  active?: "all"|"true"|"false";
+  category?: string; brand?: string; q?: string; active?: "all" | "true" | "false";
 }) {
   const qs = qstr(params as any);
   const r = await fetch(`${API}/admin/devices/export/table${qs}`, { credentials: "include" });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-  return r.blob(); // caller downloads
+  return r.blob(); // <-- correct: response.blob()
 }
 
 export async function exportGroupedXlsx(params: {
-  category?: string; brand?: string; q?: string;
-  active?: "all"|"true"|"false";
+  category?: string; brand?: string; q?: string; active?: "all" | "true" | "false";
 }) {
   const qs = qstr(params as any);
   const r = await fetch(`${API}/admin/devices/export/grouped${qs}`, { credentials: "include" });
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-  return r.blob();
+  return r.blob(); // <-- correct: response.blob()
 }
