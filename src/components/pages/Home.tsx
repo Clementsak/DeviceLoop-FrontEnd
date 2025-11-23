@@ -5,6 +5,8 @@ import { useAuth } from "../../auth/AuthContext"; // ← import
 export default function Home() {
   const { me, login, signup } = useAuth();   // ← use auth actions
 
+  const showBuyerVerifyBanner = me && me.role === "buyers" && !me.verified;
+
   return (
     <div className="space-y-12">
       {/* Hero */}
@@ -51,6 +53,33 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Verification banner for buyers */}
+      {showBuyerVerifyBanner && (
+        <section className="dl-section">
+          <div className="dl-card p-4 md:p-5 border-amber-400/60 bg-amber-50 text-amber-900 space-y-2">
+            <h2 className="text-lg font-semibold">Complete your buyer verification</h2>
+            <p className="text-sm">
+              You currently have a buyer account, but you are not yet verified.
+              Verified buyers can place bids on listings and enjoy a smoother experience.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-1">
+              <Link
+                to="/verify/buyer"
+                className="rounded-xl px-4 py-2 bg-amber-600 text-white text-sm font-medium hover:bg-amber-500"
+              >
+                Verify buyer account
+              </Link>
+              <Link
+                to="/verify/seller"
+                className="rounded-xl px-4 py-2 border border-amber-400 text-sm font-medium hover:bg-amber-100"
+              >
+                Register as seller
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Quick actions */}
       <section className="dl-section">

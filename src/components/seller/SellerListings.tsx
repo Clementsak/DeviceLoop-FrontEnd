@@ -6,6 +6,8 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? "https://localhost:5000";
 
 type ListingStatus = "active" | "ended" | "unverified" | "verified" | "rejected" | "cancelled";
 
+type AuctionMode = "continuous" | "interval" | "end_of_window";
+
 type ListingItem = {
   ListingId: string;
   Category: string;
@@ -36,6 +38,8 @@ type ListingItem = {
 
   CurrentHighestBid?: number | null;
   CurrentHighestBidderPK?: string | null;
+  MarketKey?: string | null;
+  AuctionMode?: AuctionMode | null;
 };
 
 type ListingOverviewResponse = {
@@ -53,6 +57,7 @@ export function SellerListings() {
   const [acceptMin, setAcceptMin] = useState("");
   const [acceptMax, setAcceptMax] = useState("");
   const [acceptDuration, setAcceptDuration] = useState<number>(24);
+  const [acceptMode, setAcceptMode] = useState<AuctionMode>("continuous"); 
   const [busy, setBusy] = useState(false);
   const [rejectedTarget, setRejectedTarget] = useState<ListingItem | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -137,6 +142,7 @@ export function SellerListings() {
     setAcceptMin(baseMin ? String(baseMin) : "");
     setAcceptMax(baseMax ? String(baseMax) : "");
     setAcceptDuration(item.DurationHours || 24);
+    setAcceptMode(item.AuctionMode ?? "continuous"); 
   }
 
   async function submitAccept() {
@@ -150,7 +156,7 @@ export function SellerListings() {
 
     setBusy(true);
     try {
-      const body = { sellerMin: min, sellerMax: max, durationHours: acceptDuration };
+      const body = { sellerMin: min, sellerMax: max, durationHours: acceptDuration, auctionMode: acceptMode };
       const encodedId = encodeURIComponent(acceptTarget.ListingId);
       const r = await fetch(`${API_BASE}/seller/listing-requests/${encodedId}/accept`, {
         method: "POST",
@@ -454,6 +460,19 @@ export function SellerListings() {
                   <option value={12}>12 hours</option>
                   <option value={24}>1 day</option>
                   <option value={72}>3 days</option>
+                </select>
+              </label>
+
+              <label className="space-y-1 text-sm">
+                <span>Auction mode</span>
+                <select
+                  className="w-full rounded-xl border px-3 py-2"
+                  value={acceptMode}
+                  onChange={e => setAcceptMode(e.target.value as AuctionMode)}
+                >
+                  <option value="continuous">Continuous (instant match)</option>
+                  <option value="interval">Interval (batch every X minutes)</option>
+                  <option value="end_of_window">End of window only</option>
                 </select>
               </label>
             </div>

@@ -7,6 +7,12 @@ import AppLayout from "./components/layout/AppLayout";
 import Home from "./components/pages/Home";
 import { AuthProvider } from "./auth/AuthContext";
 import RequireRole from "./auth/RequireRole";
+import VerifyBuyerPage from "./components/pages/VerifyBuyerPage";
+import SellerRegisterPage from "./components/pages/SellerRegisterPage";
+import TestBidPage from "./components/pages/TestBidPage";
+import BuyerListingsPage from "./components/pages/BuyerListingsPage";
+import MyBidsPage from "./components/pages/MyBidsPage";
+import NotificationsPage from "./components/pages/NotificationsPage";
 
 // (You can replace these with your real modules)
 import AdminApp from "./components/admin/AdminApp";
@@ -18,7 +24,34 @@ const router = createBrowserRouter([
     element: <AppLayout />,        // navbar + outlet
     children: [
       { index: true, element: <Home /> },
+       { path: "listings", element: <BuyerListingsPage /> },
+       { path: "my-bids", element: <MyBidsPage /> },
+       { path: "notifications", element: <NotificationsPage /> },
 
+      { path: "verify/buyer",
+        element: (
+          <RequireRole role="buyers">
+            <VerifyBuyerPage />
+          </RequireRole>
+        ),
+      },
+            {
+        path: "test-bid",
+        element: (
+          <RequireRole role="buyers">
+            <TestBidPage />
+          </RequireRole>
+        ),
+      },
+
+      {
+        path: "verify/seller",
+        element: (
+          <RequireRole role="buyers">
+            <SellerRegisterPage />
+          </RequireRole>
+        ),
+      },
       // Only admins can access any /admin/* page
       {
         path: "admin/*",

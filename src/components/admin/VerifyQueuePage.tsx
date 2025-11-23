@@ -1,7 +1,9 @@
 // src/components/admin/VerifyQueuePage.tsx
 import { useEffect, useState } from "react";
 import {
-  type VerifyQueueItem, adminGetVerifyQueue, adminVerifyDecision,
+  type VerifyQueueItem,
+  adminGetVerifyQueue,
+  adminVerifyDecision,
 } from "../api/admin/admin";
 
 export default function VerifyQueuePage({ kind }: { kind: "user" | "seller" }) {
@@ -21,22 +23,42 @@ export default function VerifyQueuePage({ kind }: { kind: "user" | "seller" }) {
       setLoading(false);
     }
   }
-  useEffect(() => { fetchPage(null); }, [kind]);
 
-  async function decide(u: VerifyQueueItem, decision: "approve" | "reject") {
-    const reason = decision === "reject" ? prompt("Reason (optional):") ?? "" : undefined;
-    await adminVerifyDecision(u.user_pk, kind, decision, reason);
+  useEffect(() => {
+    void fetchPage(null);
+    // re-run whenever kind switches between "user" and "seller"
+  }, [kind]);
+
+  async function decide(item: VerifyQueueItem, decision: "approve" | "reject") {
+    let reason: string | undefined;
+    if (decision === "reject") {
+      reason = prompt("Reason (optional):") ?? "";
+    }
+    await adminVerifyDecision(item.user_pk, kind, decision, reason);
     await fetchPage(cursor);
   }
+
+  const title =
+    kind === "user" ? "Buyer verification requests" : "Seller registration requests";
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Pending {kind === "user" ? "User" : "Seller"} Verifications</h2>
+        <h2 className="text-xl font-semibold">{title}</h2>
         <div className="flex gap-2">
-          <button className="px-3 py-1 rounded bg-white/10" onClick={() => fetchPage(null)}>Reset</button>
-          <button className="px-3 py-1 rounded bg-white/10 disabled:opacity-50"
-            disabled={!nextCursor} onClick={() => fetchPage(nextCursor!)}>Next</button>
+          <button
+            className="px-3 py-1 rounded bg-white/10"
+            onClick={() => fetchPage(null)}
+          >
+            Reset
+          </button>
+          <button
+            className="px-3 py-1 rounded bg-white/10 disabled:opacity-50"
+            disabled={!nextCursor}
+            onClick={() => fetchPage(nextCursor!)}
+          >
+            Next
+          </button>
         </div>
       </div>
 
@@ -51,25 +73,48 @@ export default function VerifyQueuePage({ kind }: { kind: "user" | "seller" }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map(u => (
-              <tr key={`${u.user_pk}-${u.submittedAt}`} className="border-t border-white/10">
-                <td className="p-3 font-mono">{u.user_pk}</td>
-                <td className="p-3">{u.submittedAt ? new Date(u.submittedAt).toLocaleString() : "-"}</td>
+            {rows.map(item => (
+              <tr
+                key={`${item.user_pk}-${item.submittedAt}`}
+                className="border-t border-white/10 align-top"
+              >
+                <td className="p-3 font-mono">{item.user_pk}</td>
                 <td className="p-3">
-                  <JsonPreview obj={u.type === "VerifySeller" ? u.sellerProfile : u.data} />
+                  {item.submittedAt
+                    ? new Date(item.submittedAt).toLocaleString()
+                    : "-"}
+                </td>
+                <td className="p-3">
+                  {item.type === "VerifySeller" ? (
+                    <SellerDetails seller={item.sellerProfile} />
+                  ) : (
+                    <UserDetails data={item.data} />
+                  )}
                 </td>
                 <td className="p-3 text-right">
                   <div className="flex gap-2 justify-end">
-                    <button className="px-3 py-1 rounded bg-emerald-700 hover:bg-emerald-600"
-                      onClick={() => decide(u, "approve")}>Approve</button>
-                    <button className="px-3 py-1 rounded bg-red-700 hover:bg-red-600"
-                      onClick={() => decide(u, "reject")}>Reject</button>
+                    <button
+                      className="px-3 py-1 rounded bg-emerald-700 hover:bg-emerald-600"
+                      onClick={() => decide(item, "approve")}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="px-3 py-1 rounded bg-red-700 hover:bg-red-600"
+                      onClick={() => decide(item, "reject")}
+                    >
+                      Reject
+                    </button>
                   </div>
                 </td>
               </tr>
             ))}
             {!rows.length && !loading && (
-              <tr><td colSpan={4} className="p-6 text-center text-white/60">No pending requests.</td></tr>
+              <tr>
+                <td colSpan={4} className="p-6 text-center text-white/60">
+                  No pending requests.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -78,10 +123,129 @@ export default function VerifyQueuePage({ kind }: { kind: "user" | "seller" }) {
   );
 }
 
-function JsonPreview({ obj }: { obj?: Record<string, any> }) {
-  if (!obj) return <span className="text-white/60">-</span>;
-  const text = JSON.stringify(obj, null, 2);
+/** Buyer verification details: location, Cognito info, etc. */
+function UserDetails({ data }: { data?: any }) {
+  if (!data) {
+    return <span className="text-white/60">No data.</span>;
+  }
+
+  const coords = data.coords || {};
+  const place = data.place || {};
+  const email = data.cognitoEmail;
+  const address = data.cognitoAddress;
+  const ip = data.ip;
+
+  const hasCoords = coords.lat != null && coords.lon != null;
+
   return (
-    <pre className="bg-white/5 rounded p-2 max-h-40 overflow-auto whitespace-pre-wrap">{text}</pre>
+    <div className="space-y-2 text-xs leading-relaxed">
+      <div>
+        <span className="font-semibold">Email:</span>{" "}
+        {email || <span className="text-white/60">-</span>}
+      </div>
+      <div>
+        <span className="font-semibold">Cognito address:</span>{" "}
+        {address || <span className="text-white/60">-</span>}
+      </div>
+      <div>
+        <span className="font-semibold">IP:</span>{" "}
+        {ip || <span className="text-white/60">-</span>}
+      </div>
+
+      <div className="mt-2 font-semibold">Location snapshot</div>
+      <div className="ml-2 space-y-1">
+        <div>
+          Lat:{" "}
+          {coords.lat != null ? (
+            <span className="font-mono">{String(coords.lat)}</span>
+          ) : (
+            <span className="text-white/60">-</span>
+          )}
+        </div>
+        <div>
+          Lon:{" "}
+          {coords.lon != null ? (
+            <span className="font-mono">{String(coords.lon)}</span>
+          ) : (
+            <span className="text-white/60">-</span>
+          )}
+        </div>
+        <div>
+          Accuracy:{" "}
+          {coords.accuracy != null ? (
+            <span>{String(coords.accuracy)} m</span>
+          ) : (
+            <span className="text-white/60">-</span>
+          )}
+        </div>
+
+        {hasCoords && (
+          <div className="mt-1">
+            <a
+              href={`https://www.google.com/maps?q=${coords.lat},${coords.lon}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-emerald-300 underline"
+            >
+              View on map
+            </a>
+          </div>
+        )}
+      </div>
+
+      {place && place.label && (
+        <div className="mt-2">
+          <div className="font-semibold">Resolved address (Amazon Web Services)</div>
+          <div className="ml-2">
+            {place.label}
+            {place.postalCode && `, ${place.postalCode}`}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Seller registration details: organisation info from SellerRegisterPage */
+function SellerDetails({ seller }: { seller?: any }) {
+  if (!seller) {
+    return <span className="text-white/60">No seller profile.</span>;
+  }
+
+  return (
+    <div className="space-y-2 text-xs leading-relaxed">
+      <div>
+        <span className="font-semibold">Organisation:</span>{" "}
+        {seller.organisationName || <span className="text-white/60">-</span>}
+      </div>
+      <div>
+        <span className="font-semibold">Address:</span>{" "}
+        {seller.address || <span className="text-white/60">-</span>}
+      </div>
+      <div>
+        <span className="font-semibold">Email:</span>{" "}
+        {seller.contactEmail || <span className="text-white/60">-</span>}
+      </div>
+      <div>
+        <span className="font-semibold">Phone:</span>{" "}
+        {seller.contactPhone || <span className="text-white/60">-</span>}
+      </div>
+      {seller.organisationRegNo && (
+        <div>
+          <span className="font-semibold">Registration No.:</span>{" "}
+          {seller.organisationRegNo}
+        </div>
+      )}
+      {seller.notes && (
+        <div>
+          <span className="font-semibold">Notes:</span> {seller.notes}
+        </div>
+      )}
+      {seller.submittedAt && (
+        <div className="text-white/60">
+          Submitted details at {new Date(seller.submittedAt).toLocaleString()}
+        </div>
+      )}
+    </div>
   );
 }
