@@ -13,10 +13,11 @@ import TestBidPage from "./components/pages/TestBidPage";
 import BuyerListingsPage from "./components/pages/BuyerListingsPage";
 import MyBidsPage from "./components/pages/MyBidsPage";
 import NotificationsPage from "./components/pages/NotificationsPage";
-
 // (You can replace these with your real modules)
 import AdminApp from "./components/admin/AdminApp";
 import SellerApp from "./components/seller/SellerApp";
+import ListingDetailsPage from "./components/pages/ListingDetailsPage";
+import AdvancedListingsPage from "./components/pages/AdvancedListingsPage";
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,8 @@ const router = createBrowserRouter([
        { path: "listings", element: <BuyerListingsPage /> },
        { path: "my-bids", element: <MyBidsPage /> },
        { path: "notifications", element: <NotificationsPage /> },
+       { path: "listings/:listingId", element: <ListingDetailsPage />},
+       { path: "markets", element: <AdvancedListingsPage /> },
 
       { path: "verify/buyer",
         element: (

@@ -1,6 +1,7 @@
 // --- Listing verification (admin) ---
 
 import { api_get, api_post } from "../api"; // adjust the path if api.ts is elsewhere
+import { signGetImage } from "../api";
 
 export type FinalGrade = "A" | "B" | "C";
 

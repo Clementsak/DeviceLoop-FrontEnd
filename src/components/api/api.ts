@@ -262,3 +262,76 @@ export async function api_markNotificationsRead(payload: {
 }): Promise<void> {
   await api_post("/buyer/notifications/mark-read", payload);
 }
+
+export async function getListingDetails(listingId: string) {
+  const encodedId = encodeURIComponent(listingId);
+
+  const resp = await fetch(`${API_BASE}/buyer/listings/${encodedId}`, {
+    credentials: "include",
+  });
+
+  if (!resp.ok) {
+    throw new Error(`Failed to load listing details: ${resp.status}`);
+  }
+
+  return resp.json();
+}
+
+export async function signGetImage(key: string): Promise<string> {
+  const res = await api_get<{ url: string }>(
+    `/files/sign-get?key=${encodeURIComponent(key)}`
+  );
+  return res.url;
+}
+
+export type AuctionMode = "continuous" | "interval" | "end_of_window";
+
+export interface MarketSummary {
+  marketKey: string;
+  devicePk: string;
+  category: string | null;
+  brand: string | null;
+  model: string | null;
+  variant: string | null;
+  storage: string | null;
+  ram: string | null;
+  grade: "A" | "B" | "C";
+  numListings: number;
+  numContinuous: number;
+  numInterval: number;
+  numEndOfWindow: number;
+  sellerRangeMin: number | null;
+  sellerRangeMax: number | null;
+  platformMin: number | null;
+  platformMax: number | null;
+  releasePrice: number | null;
+  releaseDate: string | null;
+}
+
+export async function api_getMarkets(params?: {
+  category?: string;
+  brand?: string;
+  model?: string;
+  grade?: string;
+}): Promise<MarketSummary[]> {
+  const search = new URLSearchParams();
+
+  if (params?.category && params.category !== "All") {
+    search.set("category", params.category);
+  }
+  if (params?.brand && params.brand !== "All") {
+    search.set("brand", params.brand);
+  }
+  if (params?.model && params.model !== "All") {
+    search.set("model", params.model);
+  }
+  if (params?.grade && params.grade !== "All") {
+    search.set("grade", params.grade.toUpperCase());
+  }
+
+  const qs = search.toString();
+  const path = qs ? `/buyer/markets?${qs}` : "/buyer/markets";
+
+  const res = await api_get<{ ok: boolean; items: MarketSummary[] }>(path);
+  return res.items ?? [];
+}
