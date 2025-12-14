@@ -18,6 +18,7 @@ import AdminApp from "./components/admin/AdminApp";
 import SellerApp from "./components/seller/SellerApp";
 import ListingDetailsPage from "./components/pages/ListingDetailsPage";
 import AdvancedListingsPage from "./components/pages/AdvancedListingsPage";
+import BuyerCartPage from "./components/pages/BuyerCartPage";
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
        { path: "notifications", element: <NotificationsPage /> },
        { path: "listings/:listingId", element: <ListingDetailsPage />},
        { path: "markets", element: <AdvancedListingsPage /> },
+       { path: "cart", element: <BuyerCartPage /> },
 
       { path: "verify/buyer",
         element: (

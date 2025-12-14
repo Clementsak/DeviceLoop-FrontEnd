@@ -260,10 +260,10 @@ export default function AdvancedListingsPage() {
                     {formatMoney(m.sellerRangeMax)}
                   </td>
                   <td className="px-3 py-2 align-top">
-                    <div>{m.numListings} active</div>
-                    <div className="text-xs text-forest-800/80">
-                      C {m.numContinuous} • I {m.numInterval} • E{" "}
-                      {m.numEndOfWindow}
+                    <div>{m.numListings} active listings</div>
+                    <div>{m.numBidders} bidders ({m.numBids} open bids)</div>
+                    <div className="text-xs text-forest-800/80 mt-1">
+                      C {m.numContinuous} • I {m.numInterval} • E {m.numEndOfWindow}
                     </div>
                   </td>
                   <td className="px-3 py-2 align-top">

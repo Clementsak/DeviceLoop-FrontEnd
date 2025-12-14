@@ -84,26 +84,44 @@ export function beginSignup() {
   window.location.href = `${API_BASE}/auth/signup`;
 }
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+// api.ts
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const method = (options.method ?? "GET").toUpperCase();
+
+  // Build headers from caller
+  const headers = new Headers(options.headers as HeadersInit | undefined);
+
+  // Always accept JSON
+  if (!headers.has("Accept")) headers.set("Accept", "application/json");
+
+  // Only set Content-Type if we actually have a body and it's not FormData
+  const hasBody = options.body !== undefined && options.body !== null;
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+
+  if (hasBody && !isFormData && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const res = await fetch(API_BASE + path, {
     credentials: "include",
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
+    headers,
   });
 
+  const text = await res.text();
+  const json = text ? JSON.parse(text) : null;
+
   if (!res.ok) {
-    const text = await res.text();
     throw new Error(`HTTP ${res.status} ${res.statusText} – ${text}`);
   }
 
-  return (await res.json()) as T;
+  return json as T;
 }
+
+
+
 
 export function api_get<T>(path: string) {
   return request<T>(path);
@@ -179,22 +197,21 @@ export interface MyBidSummary {
 
 // ================== Notifications ==================
 
+
 export type NotificationType =
-  | "bid_filled"
-  | "bid_outbid"
-  | "listing_sold"
-  | "listing_matched"
-  | "system";
+  | "TRADE_MATCHED"
+  | "BID_EXPIRED"
+  | "LISTING_EXPIRED_NO_MATCH"
+  | "PAYMENT_COMPLETED"
+  | "SYSTEM";
 
 export interface BuyerNotification {
   id: string;
   type: NotificationType;
   title: string;
   message: string;
-  createdAt: string; // ISO string
+  createdAt: string;
   isRead: boolean;
-  bidSk?: string | null;
-  listingId?: string | null;
 }
 
 // =============== Buyer bids & notifications API ===============
@@ -244,17 +261,43 @@ export async function api_getNotifications(): Promise<{
   unreadCount: number;
 }> {
   const res = await api_get<{
-    items?: BuyerNotification[];
-    notifications?: BuyerNotification[];
+    ok?: boolean;
+    items?: any[];
     unreadCount?: number;
   }>("/buyer/notifications");
 
-  const items =
-    res.items ?? res.notifications ?? ([] as BuyerNotification[]);
-  const unreadCount = res.unreadCount ?? items.filter(n => !n.isRead).length;
+  const rawItems = res.items ?? [];
+
+  const items: BuyerNotification[] = rawItems.map((n) => {
+    const t = String(n.type ?? n.Type ?? "SYSTEM");
+    const upper = t.toUpperCase();
+
+    const canon: NotificationType =
+      upper === "TRADE_FILLED" ? "TRADE_MATCHED"
+      : upper === "TRADE_MATCHED" ? "TRADE_MATCHED"
+      : upper === "BID_EXPIRED" ? "BID_EXPIRED"
+      : upper === "LISTING_EXPIRED_NO_MATCH" ? "LISTING_EXPIRED_NO_MATCH"
+      : upper === "PAYMENT_COMPLETED" ? "PAYMENT_COMPLETED"
+      : upper === "PAYMENT_COMPLETED".toLowerCase() ? "PAYMENT_COMPLETED"
+      : upper === "PAYMENT_COMPLETED".toUpperCase() ? "PAYMENT_COMPLETED"
+      : "SYSTEM";
+
+    return {
+      id: String(n.id ?? n.SK ?? ""),
+      type: canon,
+      title: String(n.title ?? "Update on your bids and listings"),
+      message: String(n.message ?? ""),
+      createdAt: String(n.createdAt ?? n.CreatedAt ?? ""),
+      isRead: Boolean(n.isRead ?? n.Read ?? false),
+    };
+  });
+
+  const unreadCount =
+    res.unreadCount ?? items.filter((n) => !n.isRead).length;
 
   return { items, unreadCount };
 }
+
 
 // POST /buyer/notifications/mark-read
 export async function api_markNotificationsRead(payload: {
@@ -306,6 +349,8 @@ export interface MarketSummary {
   platformMax: number | null;
   releasePrice: number | null;
   releaseDate: string | null;
+  numBids: number;
+  numBidders: number;
 }
 
 export async function api_getMarkets(params?: {
@@ -334,4 +379,53 @@ export async function api_getMarkets(params?: {
 
   const res = await api_get<{ ok: boolean; items: MarketSummary[] }>(path);
   return res.items ?? [];
+}
+
+// ==============================
+// Buyer – Purchases (Cart)
+// ==============================
+
+export interface BuyerPurchase {
+  listingId: string;           // PK of the listing request
+  marketKey?: string;
+  brand?: string;
+  model?: string;
+  variant?: string;
+  grade?: string;
+  sellerPk?: string;
+  auctionMode?: string | null;
+  status: string;              // listing status: ended / active / expired
+  paymentStatus: string;       // "pending" | "paid"
+  tradePrice: number | null;
+  matchedAt?: string | null;
+  paidAt?: string | null;
+}
+
+// GET /buyer/purchases
+export async function api_getPurchases(): Promise<BuyerPurchase[]> {
+  const res = await api_get<{ ok: boolean; items: BuyerPurchase[] }>(
+    "/buyer/purchases"
+  );
+
+  // Backend returns { ok: true, items: [...] }
+  const items = res.items ?? [];
+
+  // Ensure listingId is always present and non-empty
+  return items.map((it) => {
+    const listingId =
+      it.listingId ?? (it as any).pk ?? (it as any).listingPk ?? "";
+
+    return {
+      ...it,
+      listingId,
+    };
+  });
+}
+
+// POST /buyer/purchases/<listingId>/pay
+export async function api_payForPurchase(listingId: string): Promise<void> {
+  if (!listingId) {
+    throw new Error("Missing listingId");
+  }
+  await api_post(`/buyer/purchases/${encodeURIComponent(listingId)}/pay`, {});
 }

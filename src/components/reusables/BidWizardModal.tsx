@@ -1,4 +1,4 @@
-// src/components/bids/BidWizardModal.tsx
+// src/components/reusables/BidWizardModal.tsx
 import {
   useCallback,
   useEffect,

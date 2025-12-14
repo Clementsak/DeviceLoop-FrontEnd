@@ -68,7 +68,7 @@ export default function Navbar() {
           {navLink({ to: "/favourites", label: "Favourites / Follow" })}
           {navLink({ to: "/notifications", label: "Notifications" })}
           {navLink({ to: "/my-bids", label: "My Bids" })}
-          {navLink({ to: "/profile", label: "Profile" })}
+          {navLink({ to: "/cart", label: "cart" })}
         </nav>
 
         {/* Right side: auth state / dropdowns */}
