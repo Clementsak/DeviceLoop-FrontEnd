@@ -101,9 +101,49 @@ export type SellerSummary = {
     date: string;
   } | null;
 };
+export type SellerOrdersPaymentFilter = "paid" | "unpaid" | "pending" | "all";
+
+export type SellerOrderRow = {
+  listingId: string;
+  marketKey?: string;
+  brand?: string;
+  model?: string;
+  variant?: string | null;
+
+  listingStatus?: string;
+  matchedBuyerPk?: string | null;
+
+  tradePrice?: number;
+  paymentStatus?: string; // "paid" or "pending" or "unpaid" depending on your backend mapping
+  paidAt?: string | null;
+
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+type SellerOrdersResponse = { items: SellerOrderRow[] };
 
 export const SellerAPI = {
-  async summary(): Promise<SellerSummary> {
-    return api_get<SellerSummary>("/seller/summary");
+  summary: async () => {
+    return api_get("/seller/summary");
+  },
+
+  getOrders: async (opts: {
+    paymentStatus?: "paid" | "unpaid" | "all";
+    limit?: number;
+  }) => {
+    const params = new URLSearchParams();
+
+    if (opts?.paymentStatus && opts.paymentStatus !== "all") {
+      params.set("paymentStatus", opts.paymentStatus);
+    }
+    if (opts?.limit) {
+      params.set("limit", String(opts.limit));
+    }
+
+    const qs = params.toString();
+    const data = await api_get<SellerOrdersResponse>(`/seller/orders${qs ? `?${qs}` : ""}`);
+
+    return data?.items ?? [];
   },
 };

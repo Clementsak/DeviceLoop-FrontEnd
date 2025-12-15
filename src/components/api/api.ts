@@ -87,7 +87,6 @@ export function beginSignup() {
 // api.ts
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const method = (options.method ?? "GET").toUpperCase();
 
   // Build headers from caller
   const headers = new Headers(options.headers as HeadersInit | undefined);
@@ -162,7 +161,7 @@ export async function submitSellerRegistration(payload: SellerRegisterPayload) {
 
 export async function getNotificationsUnreadCount() {
   const res = await api.get("/buyer/notifications/unread-count");
-  return res.data as { ok: boolean; count: number };
+  return res as { ok: boolean; count: number };
 }
 
 export async function getNotifications() {
@@ -202,8 +201,7 @@ export type NotificationType =
   | "TRADE_MATCHED"
   | "BID_EXPIRED"
   | "LISTING_EXPIRED_NO_MATCH"
-  | "PAYMENT_COMPLETED"
-  | "SYSTEM";
+  | "PAYMENT_COMPLETED";
 
 export interface BuyerNotification {
   id: string;
@@ -268,29 +266,40 @@ export async function api_getNotifications(): Promise<{
 
   const rawItems = res.items ?? [];
 
-  const items: BuyerNotification[] = rawItems.map((n) => {
-    const t = String(n.type ?? n.Type ?? "SYSTEM");
-    const upper = t.toUpperCase();
+  const allowed: NotificationType[] = [
+  "TRADE_MATCHED",
+  "BID_EXPIRED",
+  "LISTING_EXPIRED_NO_MATCH",
+  "PAYMENT_COMPLETED",
+];
 
-    const canon: NotificationType =
-      upper === "TRADE_FILLED" ? "TRADE_MATCHED"
-      : upper === "TRADE_MATCHED" ? "TRADE_MATCHED"
-      : upper === "BID_EXPIRED" ? "BID_EXPIRED"
-      : upper === "LISTING_EXPIRED_NO_MATCH" ? "LISTING_EXPIRED_NO_MATCH"
-      : upper === "PAYMENT_COMPLETED" ? "PAYMENT_COMPLETED"
-      : upper === "PAYMENT_COMPLETED".toLowerCase() ? "PAYMENT_COMPLETED"
-      : upper === "PAYMENT_COMPLETED".toUpperCase() ? "PAYMENT_COMPLETED"
-      : "SYSTEM";
+const items: BuyerNotification[] = (rawItems ?? [])
+  .map((n) => {
+    // raw type can come from "type" or "Type"
+    const rawType = String(n.type ?? n.Type ?? "").trim().toUpperCase();
+
+    // Strict: only keep the 4 canonical types
+    if (!allowed.includes(rawType as NotificationType)) {
+      return null;
+    }
+
+    // Read flag: handle boolean or legacy string values
+    const readVal = n.isRead ?? n.Read ?? false;
+    const isRead =
+      typeof readVal === "boolean"
+        ? readVal
+        : String(readVal).trim().toLowerCase() === "true";
 
     return {
       id: String(n.id ?? n.SK ?? ""),
-      type: canon,
+      type: rawType as NotificationType,
       title: String(n.title ?? "Update on your bids and listings"),
       message: String(n.message ?? ""),
       createdAt: String(n.createdAt ?? n.CreatedAt ?? ""),
-      isRead: Boolean(n.isRead ?? n.Read ?? false),
-    };
-  });
+      isRead,
+    } as BuyerNotification;
+  })
+  .filter((x): x is BuyerNotification => x !== null);
 
   const unreadCount =
     res.unreadCount ?? items.filter((n) => !n.isRead).length;

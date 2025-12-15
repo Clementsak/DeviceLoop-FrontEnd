@@ -3,6 +3,7 @@ import { NavLink, Outlet, Route, Routes } from "react-router-dom";
 import { SellerDashboard } from "./SellerDashboard";
 import { SellerListings } from "./SellerListings";
 import { SellerNewListing } from "./SellerNewListing";
+import SellerOrders from "./SellerOrders";
 
 export default function SellerApp() {
   return (
@@ -22,6 +23,7 @@ export default function SellerApp() {
           <Route index element={<SellerDashboard />} />
           <Route path="listings" element={<SellerListings />} />
           <Route path="listings/new" element={<SellerNewListing  />} />
+          <Route path="orders" element={<SellerOrders />} />
         </Routes>
         <Outlet />
       </main>
