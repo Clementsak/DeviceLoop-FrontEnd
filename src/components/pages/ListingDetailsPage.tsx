@@ -183,7 +183,7 @@ function ListingDetailsContent({
     })}`;
   };
 
-    const q = (listing.questionnaire || {}) as any;
+  const q = (listing.questionnaire || {}) as any;
 
   const yesNo = (v: any) => {
     if (v === true || v === "yes") return "Yes";
@@ -199,23 +199,23 @@ function ListingDetailsContent({
 
   return (
     <div className="dl-page">
-      <div className="max-w-5xl mx-auto py-8 space-y-6 text-white">
+      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6 text-forest-900">
         {/* Back link */}
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-white/70 hover:text-white underline mb-2"
+          className="text-sm text-forest-700 hover:text-forest-900 underline mb-2"
         >
           ← Back to listings
         </button>
 
         {/* 1. Photos section */}
-        <section className="bg-forest-800/40 rounded-2xl p-5 border border-white/5 space-y-4">
+        <section className="bg-white rounded-2xl p-4 sm:p-5 border border-forest-200 space-y-4">
           <h2 className="text-xl font-semibold">Photos</h2>
 
           {/* Main photo */}
           <div
-            className="aspect-video w-full bg-forest-900 rounded-xl flex items-center justify-center overflow-hidden"
+            className="aspect-video w-full bg-forest-50 rounded-xl flex items-center justify-center overflow-hidden border border-forest-200"
           >
             {mainPhotoUrl ? (
               <img
@@ -225,7 +225,7 @@ function ListingDetailsContent({
                 onClick={() => setActivePhoto(mainPhotoUrl)}
               />
             ) : (
-              <span className="text-white/50 text-sm">
+              <span className="text-forest-700 text-sm">
                 No photos uploaded for this listing.
               </span>
             )}
@@ -238,7 +238,7 @@ function ListingDetailsContent({
                 <button
                   key={label}
                   type="button"
-                  className="relative rounded-lg overflow-hidden border border-white/10 bg-black cursor-zoom-in"
+                  className="relative rounded-xl overflow-hidden border border-forest-200 bg-forest-50 cursor-zoom-in"
                   onClick={() => setActivePhoto(url)}
                 >
                   <img
@@ -246,7 +246,7 @@ function ListingDetailsContent({
                     alt={label}
                     className="h-20 w-full object-cover"
                   />
-                  <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-[10px] px-1 py-0.5 text-center">
+                  <span className="absolute bottom-0 left-0 right-0 bg-forest-900/70 text-white text-[10px] px-1 py-0.5 text-center">
                     {label}
                   </span>
                 </button>
@@ -256,9 +256,9 @@ function ListingDetailsContent({
         </section>
 
         {/* 2. Specifications */}
-        <section className="bg-forest-800/40 rounded-2xl p-5 border border-white/5 space-y-3">
+        <section className="bg-white rounded-2xl p-4 sm:p-5 border border-forest-200 space-y-4">
           <h2 className="text-xl font-semibold">Device specifications</h2>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+<dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
             <SpecRow label="Brand" value={device.brand} />
             <SpecRow label="Model" value={device.model} />
             <SpecRow label="Variant" value={device.variant} />
@@ -274,11 +274,11 @@ function ListingDetailsContent({
           </dl>
         </section>
 
-                {/* 3. Questionnaire */}
-        <section className="bg-forest-800/40 rounded-2xl p-5 border border-white/5 space-y-3">
+        {/* 3. Questionnaire */}
+        <section className="bg-white rounded-2xl p-4 sm:p-5 border border-forest-200 space-y-4">
           <h2 className="text-xl font-semibold">Condition questionnaire</h2>
           {listing.questionnaire ? (
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+<dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
               <SpecRow
                 label="Biometric lock / Face ID"
                 value={yesNo(q.biometric)}
@@ -321,9 +321,9 @@ function ListingDetailsContent({
 
 
         {/* 4. Auction details */}
-        <section className="bg-forest-800/40 rounded-2xl p-5 border border-white/5 space-y-3">
+        <section className="bg-white rounded-2xl p-4 sm:p-5 border border-forest-200 space-y-4">
           <h2 className="text-xl font-semibold">Auction details</h2>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+<dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
             <SpecRow label="Status" value={auction.status} />
             <SpecRow
               label="Auction mode"
@@ -350,9 +350,9 @@ function ListingDetailsContent({
         </section>
 
         {/* 5. Platform / release info */}
-        <section className="bg-forest-800/40 rounded-2xl p-5 border border-white/5 space-y-3">
+        <section className="bg-white rounded-2xl p-4 sm:p-5 border border-forest-200 space-y-4">
           <h2 className="text-xl font-semibold">Device and platform info</h2>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+<dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
             <SpecRow
               label="Official release date"
               value={formatDateTime(device.releaseDate)}
@@ -396,8 +396,8 @@ function SpecRow({
 }) {
   return (
     <div className="flex flex-col sm:flex-row sm:gap-3">
-      <dt className="sm:w-60 text-white/60">{label}</dt>
-      <dd className="font-medium">
+      <dt className="sm:w-60 text-forest-700">{label}</dt>
+      <dd className="font-semibold text-forest-900">
         {value === null || value === undefined || value === ""
           ? "Not provided"
           : value}

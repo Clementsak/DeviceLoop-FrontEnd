@@ -164,16 +164,6 @@ export async function getNotificationsUnreadCount() {
   return res as { ok: boolean; count: number };
 }
 
-export async function getNotifications() {
-  const res = await api.get("/buyer/notifications");
-  return res.data as { ok: boolean; items: Notification[] };
-}
-
-export async function markAllNotificationsRead() {
-  const res = await api.post("/buyer/notifications/mark-all-read");
-  return res.data as { ok: boolean };
-}
-
 // ================== Bidding (buyer) ==================
 
 export type BidStatus = "open" | "filled" | "cancelled" | "expired";

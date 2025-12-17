@@ -21,6 +21,7 @@ export default function BuyerCartPage() {
   const [items, setItems] = useState<BuyerPurchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     load();
@@ -38,12 +39,15 @@ export default function BuyerCartPage() {
 
   async function payNow(listingId: string) {
     try {
-      setPaying(true);
-      await api_payForPurchase(listingId);
-      await load();
-    } finally {
-      setPaying(false);
-    }
+  setError(null);
+  setPaying(true);
+  await api_payForPurchase(listingId);
+  await load();
+} catch (e: any) {
+  setError(e?.message ?? "Payment failed.");
+} finally {
+  setPaying(false);
+}
   }
 
   async function payAll() {
@@ -65,22 +69,33 @@ export default function BuyerCartPage() {
     }
   }
 
-  if (loading) return <div className="p-6">Loading cart…</div>;
+if (loading)
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 text-slate-900">
+      Loading cart…
+    </div>
+  );
 
   const pending = items.filter((x) => x.paymentStatus === "pending");
   const history = items.filter((x) => x.paymentStatus === "paid");
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6 text-slate-900">
+    <h1 className="text-2xl font-bold">Your Cart</h1>
+    {error && (
+  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    {error}
+  </div>
+)}
+
 
       {/* Pending purchases */}
       <section>
-        <div className="flex items-center justify-between mb-3">
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
           <h2 className="text-xl font-semibold">Pending Payment</h2>
           {pending.length > 0 && (
             <button
-              className="px-4 py-1 rounded bg-green-700 text-white disabled:opacity-50"
+      className="w-full sm:w-auto px-4 py-2 rounded-xl bg-forest-700 text-white hover:bg-forest-600 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={paying}
               onClick={payAll}
             >
@@ -89,34 +104,36 @@ export default function BuyerCartPage() {
           )}
         </div>
 
-        {pending.length === 0 && <div>No unpaid purchases.</div>}
+{pending.length === 0 && (
+  <div className="text-slate-600">No pending payments.</div>
+)}
 
         <div className="space-y-3">
           {pending.map((p) => (
             <div
               key={p.listingId}
-              className="border rounded p-4 bg-white shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+className="border border-forest-200 rounded-2xl p-4 bg-white shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
             >
               <div>
                 <div className="font-semibold">
                   {p.brand} {p.model} {p.variant ? `(${p.variant})` : ""}{" "}
                   {p.grade ? `(${p.grade})` : ""}
                 </div>
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-slate-700">
                   Matched at: {formatDateTime(p.matchedAt)}
                 </div>
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-slate-700">
                   Seller: {maskUserId(p.sellerPk)}
                 </div>
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-slate-700">
                   Auction mode: {p.auctionMode ?? "Not provided"}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-slate-500">
                   Listing status: {p.status || "ended"}
                 </div>
               </div>
 
-              <div className="text-right">
+              <div className="sm:text-right">
                 <div className="font-semibold mb-1">
                   Price: RM {p.tradePrice ?? 0}
                 </div>
@@ -142,7 +159,7 @@ export default function BuyerCartPage() {
           {history.map((p) => (
             <div
               key={p.listingId}
-              className="border rounded p-4 bg-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+className="border border-slate-200 rounded-2xl p-4 bg-forest-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
             >
               <div>
                 <div className="font-semibold">
@@ -160,7 +177,7 @@ export default function BuyerCartPage() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-semibold text-green-700">
+                <div className="font-semibold text-forest-800">
                   Paid: RM {p.tradePrice ?? 0}
                 </div>
               </div>

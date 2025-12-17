@@ -1,5 +1,5 @@
 // src/pages/SellerRegisterPage.tsx
-import { useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { useAuth } from "../../auth/AuthContext";
 import { submitSellerRegistration } from "../api/api";
 
@@ -21,13 +21,49 @@ export default function SellerRegisterPage() {
   const update = (field: keyof typeof form, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const labelClass = "block text-sm font-semibold text-slate-800";
+  const inputClass =
+    "w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 shadow-sm " +
+    "focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400";
+
+  useEffect(() => {
+    if (!me) return;
+
+    setForm((f) => ({
+      ...f,
+      // only fill if the user has not typed anything yet
+      contactEmail: f.contactEmail || me.email || "",
+      contactPhone: f.contactPhone || me.phone_number || "",
+    }));
+  }, [me?.email, me?.phone_number]);
+
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(false);
 
     if (!form.organisationName.trim()) {
       setError("Organisation name is required.");
+      return;
+    }
+        if (!form.organisationName.trim()) {
+      setError("Organisation name is required.");
+      return;
+    }
+    if (!form.organisationRegNo.trim()) {
+      setError("Registration number is required.");
+      return;
+    }
+    if (!form.address.trim()) {
+      setError("Business address is required.");
+      return;
+    }
+    if (!form.contactEmail.trim()) {
+      setError("Contact email is required.");
+      return;
+    }
+    if (!form.contactPhone.trim()) {
+      setError("Contact phone number is required.");
       return;
     }
 
@@ -53,7 +89,7 @@ export default function SellerRegisterPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-6">
+    <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 space-y-6">
       <h1 className="text-2xl font-semibold">Register as a seller</h1>
       <p className="text-black/70">
         Submit your basic organisation details. An admin will review and enable seller
@@ -62,27 +98,30 @@ export default function SellerRegisterPage() {
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label className="block text-sm font-medium">Organisation name *</label>
+          <label className={labelClass}>Organisation name *</label>
           <input
-            className="w-full rounded-xl bg-white/5 px-3 py-2"
+            className={inputClass}
+            required
             value={form.organisationName}
             onChange={(e) => update("organisationName", e.target.value)}
           />
         </div>
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium">Registration number</label>
+          <label className={labelClass}>Registration number*</label>
           <input
-            className="w-full rounded-xl bg-white/5 px-3 py-2"
+            className={inputClass}
+            required
             value={form.organisationRegNo}
             onChange={(e) => update("organisationRegNo", e.target.value)}
           />
         </div>
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium">Business address</label>
+          <label className={labelClass}>Business address*</label>
           <textarea
-            className="w-full rounded-xl bg-white/5 px-3 py-2"
+            className={inputClass}
+            required
             rows={3}
             value={form.address}
             onChange={(e) => update("address", e.target.value)}
@@ -91,18 +130,20 @@ export default function SellerRegisterPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium">Contact email</label>
+            <label className={labelClass}>Contact email*</label>
             <input
               type="email"
-              className="w-full rounded-xl bg-white/5 px-3 py-2"
+              className={inputClass}
+              required
               value={form.contactEmail}
               onChange={(e) => update("contactEmail", e.target.value)}
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-sm font-medium">Contact phone</label>
+            <label className={labelClass}>Contact phone*</label>
             <input
-              className="w-full rounded-xl bg-white/5 px-3 py-2"
+              className={inputClass}
+              required
               value={form.contactPhone}
               onChange={(e) => update("contactPhone", e.target.value)}
             />
@@ -110,30 +151,35 @@ export default function SellerRegisterPage() {
         </div>
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium">Website</label>
+          <label className={labelClass}>Website</label>
           <input
-            className="w-full rounded-xl bg-white/5 px-3 py-2"
+            className={inputClass}
             value={form.website}
             onChange={(e) => update("website", e.target.value)}
           />
         </div>
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium">Notes for admin</label>
+          <label className={labelClass}>Notes for admin</label>
           <textarea
-            className="w-full rounded-xl bg-white/5 px-3 py-2"
+            className={inputClass}
             rows={3}
             value={form.notes}
             onChange={(e) => update("notes", e.target.value)}
           />
         </div>
 
-        {error && <div className="text-sm text-red-400">{error}</div>}
-        {success && (
-          <div className="text-sm text-emerald-400">
-            Seller registration submitted. An admin will review it.
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
           </div>
         )}
+        {success && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+            Seller registration submitted. Please wait for administrator review.
+          </div>
+        )}
+
 
         <button
           type="submit"

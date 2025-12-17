@@ -96,12 +96,14 @@ export type SellerSummary = {
   orders_pending: number;
   messages_unread: number;
   generated_at: string;
-  next_payout?: {
-    amount: number;
-    date: string;
-  } | null;
+  next_payout?: string | null;
+
+  listings_expired?: number;
+  listings_matched?: number;
+  requests_pending?: number;
 };
-export type SellerOrdersPaymentFilter = "paid" | "unpaid" | "pending" | "all";
+
+export type SellerOrdersPaymentFilter = "paid" | "pending" | "all";
 
 export type SellerOrderRow = {
   listingId: string;
@@ -114,7 +116,7 @@ export type SellerOrderRow = {
   matchedBuyerPk?: string | null;
 
   tradePrice?: number;
-  paymentStatus?: string; // "paid" or "pending" or "unpaid" depending on your backend mapping
+  paymentStatus?: string; // "paid" or "pending" depending on your backend mapping
   paidAt?: string | null;
 
   createdAt?: string;
@@ -124,12 +126,11 @@ export type SellerOrderRow = {
 type SellerOrdersResponse = { items: SellerOrderRow[] };
 
 export const SellerAPI = {
-  summary: async () => {
-    return api_get("/seller/summary");
-  },
+  summary: () => api_get<SellerSummary>("/seller/summary"),
+
 
   getOrders: async (opts: {
-    paymentStatus?: "paid" | "unpaid" | "all";
+    paymentStatus?: SellerOrdersPaymentFilter;
     limit?: number;
   }) => {
     const params = new URLSearchParams();
@@ -147,3 +148,4 @@ export const SellerAPI = {
     return data?.items ?? [];
   },
 };
+

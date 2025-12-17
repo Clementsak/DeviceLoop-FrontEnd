@@ -1,5 +1,5 @@
 // src/pages/BuyerListingsPage.tsx
-import React, {
+import {
   useEffect,
   useMemo,
   useState,
@@ -8,6 +8,7 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import { api_get } from "../api/api";
 import { BidWizardModal } from "../reusables/BidWizardModal"; // <-- path to your modal
+import { useAuth } from "../../auth/AuthContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "https://localhost:5000";
 
@@ -60,6 +61,10 @@ export default function BuyerListingsPage() {
   const [selectedVariant, setSelectedVariant] = useState<string>("All");
   const [selectedSpec, setSelectedSpec] = useState<string>("All"); // RAM/Storage combined
   const [selectedGrade, setSelectedGrade] = useState<string>("All");
+  const { me, login } = useAuth();
+
+  const canCreateBidRequest =
+    !!me && me.role === "buyers" && me.verified === true;
 
   // New: global bid wizard modal
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -138,10 +143,10 @@ export default function BuyerListingsPage() {
       selectedVariant === "All"
         ? filteredByModel
         : filteredByModel.filter(
-            l =>
-              (selectedVariant === "No variant" && !l.variant) ||
-              l.variant === selectedVariant
-          ),
+          l =>
+            (selectedVariant === "No variant" && !l.variant) ||
+            l.variant === selectedVariant
+        ),
     [filteredByModel, selectedVariant]
   );
 
@@ -158,8 +163,8 @@ export default function BuyerListingsPage() {
       selectedSpec === "All"
         ? filteredByVariant
         : filteredByVariant.filter(
-            l => `${l.ram}/${l.storage}` === selectedSpec
-          ),
+          l => `${l.ram}/${l.storage}` === selectedSpec
+        ),
     [filteredByVariant, selectedSpec]
   );
 
@@ -169,11 +174,11 @@ export default function BuyerListingsPage() {
   );
 
   const finalListings = useMemo(
-    () => 
+    () =>
       selectedGrade === "All"
         ? filteredBySpec
         : filteredBySpec.filter(l => l.grade === selectedGrade),
-        [filteredBySpec, selectedGrade]);
+    [filteredBySpec, selectedGrade]);
 
   function resetFilters() {
     setSelectedCategory("All");
@@ -186,7 +191,7 @@ export default function BuyerListingsPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 text-forest-900 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-forest-900">
             Browse Listings
@@ -197,7 +202,7 @@ export default function BuyerListingsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => void load()}
             disabled={loading}
@@ -208,11 +213,33 @@ export default function BuyerListingsPage() {
 
           {/* New: global bid wizard trigger */}
           <button
-            onClick={() => setWizardOpen(true)}
-            className="px-4 py-2 rounded-xl bg-forest-600 text-sm font-medium text-white hover:bg-forest-500"
+            type="button"
+            onClick={() => {
+              setError(null);
+
+              if (!me) {
+                login();
+                return;
+              }
+
+              if (!canCreateBidRequest) {
+                setError("Your buyer account must be approved by an admin before you can create a bid request.");
+                return;
+              }
+
+              setWizardOpen(true);
+            }}
+            disabled={!me || !canCreateBidRequest}
+            className={[
+              "rounded-xl px-4 py-2 text-white transition",
+              !me || !canCreateBidRequest
+                ? "bg-slate-400 cursor-not-allowed opacity-70"
+                : "bg-forest-600 hover:bg-forest-700",
+            ].join(" ")}
           >
             Create bid request
           </button>
+
 
           <button
             onClick={resetFilters}
@@ -277,7 +304,7 @@ export default function BuyerListingsPage() {
         </p>
       )}
 
-            {/* Listing cards – lighter, greenish theme + "View details" */}
+      {/* Listing cards – lighter, greenish theme + "View details" */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {finalListings.map(l => (
           <article
@@ -327,7 +354,7 @@ export default function BuyerListingsPage() {
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-between text-xs text-forest-600">
+            <div className="mt-3 flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
               <span>
                 Mode: {l.auctionMode} • Ends:{" "}
                 {new Date(l.auctionEndsAt).toLocaleString()}
@@ -345,12 +372,15 @@ export default function BuyerListingsPage() {
       </div>
 
       {/* Global bid wizard – create a NEW buyer bid request from the verified catalogue */}
-            <BidWizardModal
+      <BidWizardModal
         open={wizardOpen}
         onClose={() => setWizardOpen(false)}
         mode="continuous" // or "end_of_window" if you prefer
         onSubmit={async payload => {
           // payload = BidWizardSubmitPayload from the modal
+          if (!canCreateBidRequest) {
+            throw new Error("Your buyer account must be approved by an admin before you can create a bid request.");
+          }
           const res = await fetch(`${API_BASE}/buyer/bids`, {
             method: "POST",
             headers: {

@@ -356,8 +356,36 @@ export function BidWizardModal({
         blockingError: "Please enter a valid minimum and maximum.",
         bandLow: null,
         bandHigh: null,
+        finalSuggested: null,
       };
     }
+    // ✅ Strict platform range enforcement for buyer range
+    if (min < platformMin) {
+      return {
+        platformMin,
+        platformMax,
+        midpoint: null,
+        isBuyout: false,
+        blockingError: `Buyer minimum must be at least RM ${platformMin.toFixed(2)}.`,
+        bandLow: null,
+        bandHigh: null,
+        finalSuggested: null,
+      };
+    }
+
+    if (max > platformMax) {
+      return {
+        platformMin,
+        platformMax,
+        midpoint: null,
+        isBuyout: false,
+        blockingError: `Buyer maximum must not exceed RM ${platformMax.toFixed(2)}.`,
+        bandLow: null,
+        bandHigh: null,
+        finalSuggested: null,
+      };
+    }
+
 
     const midpoint = (min + max) / 2;
     let isBuyout = false;
@@ -374,15 +402,18 @@ export function BidWizardModal({
       isBuyout = true;
     }
 
-    const parsedFinal = Number(finalBid || midpoint);
-    const finalClamped = clamp(parsedFinal || midpoint, platformMin, platformMax);
+    const parsedFinal = finalBid.trim() === "" ? midpoint : Number(finalBid);
+    const finalClamped = clamp(
+      Number.isFinite(parsedFinal) ? parsedFinal : midpoint,
+      platformMin,
+      platformMax
+    );
 
-    const bandLow = clamp(finalClamped * 0.8, min, platformMax);
-    const bandHigh = clamp(finalClamped * 1.2, platformMin, max);
+    // band lower bound must respect buyer minimum and platform minimum
+    const bandLowClamped = clamp(finalClamped * 0.8, min, platformMax);
+    // band upper bound must respect buyer maximum and platform maximum
+    const bandHighClamped = clamp(finalClamped * 1.2, platformMin, max);
 
-    // Ensure band is inside both user range and platform range
-    const bandLowClamped = clamp(bandLow, platformMin, platformMax);
-    const bandHighClamped = clamp(bandHigh, platformMin, platformMax);
 
     if (bandHighClamped < bandLowClamped) {
       blockingError =
@@ -394,7 +425,7 @@ export function BidWizardModal({
       platformMin,
       platformMax,
       midpoint,
-      isBuyout,
+      isBuyout: false,
       blockingError,
       bandLow: bandLowClamped,
       bandHigh: bandHighClamped,
@@ -456,12 +487,16 @@ export function BidWizardModal({
 
     const min = Number(buyerMin);
     const max = Number(buyerMax);
-    const bid = Number(finalBid);
+    const bid =
+      finalBid.trim() === ""
+        ? Number(pricingDerived.finalSuggested ?? pricingDerived.midpoint)
+        : Number(finalBid);
 
     if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(bid)) {
       setError("Please enter valid numerical values for all fields.");
       return;
     }
+
 
     if (pricingDerived.blockingError) {
       setError(pricingDerived.blockingError);
@@ -469,6 +504,21 @@ export function BidWizardModal({
     }
 
     const { platformMin, platformMax } = pricingDerived;
+    // ✅ enforce buyer range within platform range (submit-time safety)
+    if (min < platformMin || max > platformMax) {
+      setError(
+        `Buyer minimum and buyer maximum must stay within the platform range (RM ${platformMin.toFixed(
+          2
+        )} – RM ${platformMax.toFixed(2)}).`
+      );
+      return;
+    }
+
+    // ✅ final bid must be inside buyer range too
+    if (bid < min || bid > max) {
+      setError("Final bid must be within your buyer minimum and buyer maximum.");
+      return;
+    }
 
     // Enforce platform min/max ONLY at submit time for the final bid
     if (bid < platformMin || bid > platformMax) {
@@ -568,8 +618,8 @@ export function BidWizardModal({
   const showDeviceSelection = !listing;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 text-white">
-      <div className="w-full max-w-2xl rounded-2xl bg-slate-900 p-6 shadow-xl">
+    <div className="fixed inset-0 z-40 flex items-start sm:items-center justify-center bg-black/60 px-4 py-6">
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-4 sm:p-6 shadow-xl ring-1 ring-black/5 text-forest-900">
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
@@ -577,7 +627,7 @@ export function BidWizardModal({
           </h2>
           <button
             type="button"
-            className="text-sm text-gray-400 hover:text-white"
+            className="text-forest-500 hover:text-forest-800"
             onClick={onClose}
             disabled={loading}
           >
@@ -639,7 +689,7 @@ export function BidWizardModal({
         {step === "reviewAndBid" && (
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Device summary */}
-            <div className="rounded-xl bg-black/25 px-3 py-2 text-xs text-white/80 space-y-1">
+<div className="rounded-xl bg-forest-200 px-3 py-2 text-xs text-forest-900 space-y-1 border border-forest-300">
               {listing ? (
                 <>
                   <p className="font-semibold">
@@ -705,10 +755,12 @@ export function BidWizardModal({
                 <span>Buyer minimum (RM)</span>
                 <input
                   type="number"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-forest-200 bg-white px-3 py-2 text-sm text-forest-900 placeholder:text-forest-400 focus:outline-none focus:ring-2 focus:ring-forest-500/30 focus:border-forest-500"
                   value={buyerMin}
                   onChange={e => setBuyerMin(e.target.value)}
                   step="1.00"
+                  min={platformInfo?.platformMin}
+                  max={platformInfo?.platformMax}
                 />
               </label>
 
@@ -716,17 +768,19 @@ export function BidWizardModal({
                 <span>Buyer maximum (RM)</span>
                 <input
                   type="number"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-forest-200 bg-white px-3 py-2 text-sm text-forest-900 placeholder:text-forest-400 focus:outline-none focus:ring-2 focus:ring-forest-500/30 focus:border-forest-500"
                   value={buyerMax}
                   onChange={e => setBuyerMax(e.target.value)}
                   step="1.00"
+                  min={platformInfo?.platformMin}
+                  max={platformInfo?.platformMax}
                 />
               </label>
             </div>
 
             {/* Midpoint and flexible band */}
             {pricingDerived && pricingDerived.midpoint && (
-              <div className="rounded-xl bg-black/30 px-3 py-2 text-xs text-white/80 space-y-1">
+              <div className="rounded-xl bg-forest-50 px-3 py-2 text-xs text-forest-800 space-y-1 border border-forest-200">
                 <p>
                   Midpoint of your range:{" "}
                   <span className="font-semibold">
@@ -753,7 +807,7 @@ export function BidWizardModal({
               <span>Final bid price (RM)</span>
               <input
                 type="number"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-forest-200 bg-white px-3 py-2 text-sm text-forest-900 focus:outline-none focus:ring-2 focus:ring-forest-500/30 focus:border-forest-500"
                 value={finalBid}
                 onChange={e => setFinalBid(e.target.value)}
                 disabled={!pricingDerived || !!pricingDerived.blockingError}
@@ -767,7 +821,7 @@ export function BidWizardModal({
             </label>
 
             {infoMessage && (
-              <p className="text-xs text-emerald-300">{infoMessage}</p>
+              <p className="text-xs text-forest-700">{infoMessage}</p>
             )}
 
             {/* Footer buttons */}
@@ -775,7 +829,7 @@ export function BidWizardModal({
               {showDeviceSelection && (
                 <button
                   type="button"
-                  className="rounded-xl px-4 py-2 text-sm text-gray-300 hover:bg-white/5"
+                  className="rounded-xl px-4 py-2 text-sm text-forest-700 border border-forest-200 hover:bg-forest-50"
                   onClick={() => setStep("selectDevice")}
                   disabled={loading}
                 >
@@ -784,7 +838,7 @@ export function BidWizardModal({
               )}
               <button
                 type="button"
-                className="rounded-xl px-4 py-2 text-sm text-gray-300 hover:bg-white/5"
+                className="rounded-xl px-4 py-2 text-sm text-forest-700 border border-forest-200 hover:bg-forest-50"
                 onClick={onClose}
                 disabled={loading}
               >
@@ -812,7 +866,7 @@ export function BidWizardModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-4 py-2 text-gray-300 hover:bg-white/5"
+              className="rounded-xl px-4 py-2 text-sm text-forest-700 border border-forest-200 hover:bg-forest-50"
               disabled={loading}
             >
               Cancel
@@ -849,13 +903,12 @@ function StepBadge({
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
-          active ? "bg-forest-600 text-white" : "bg-white/10 text-white/60"
-        }`}
+        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${active ? "bg-forest-600 text-white" : "bg-forest-100 text-forest-700 ring-1 ring-forest-200"
+          }`}
       >
         {index}
       </div>
-      <span className={active ? "font-medium" : "text-white/60"}>{label}</span>
+      <span className={active ? "font-medium text-forest-900" : "text-forest-600"}>{label}</span>
     </div>
   );
 }
@@ -905,7 +958,7 @@ function DeviceSelectionStep(props: {
 
   return (
     <div className="space-y-4 text-sm">
-      <p className="text-white/70">
+      <p className="text-forest-700">
         Start by selecting the exact device and grade for which you want to
         place a bid. All options come from the verified device catalogue.
       </p>
@@ -915,7 +968,7 @@ function DeviceSelectionStep(props: {
         <label className="space-y-1">
           <span className="font-medium">Category *</span>
           <select
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+            className="w-full rounded-lg border border-forest-200 bg-white px-3 py-2 text-forest-900 focus:outline-none focus:ring-2 focus:ring-forest-500/30 focus:border-forest-500"
             value={selectedCategory}
             onChange={e => {
               setSelectedCategory(e.target.value);
@@ -938,7 +991,7 @@ function DeviceSelectionStep(props: {
         <label className="space-y-1">
           <span className="font-medium">Brand *</span>
           <select
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+            className="w-full rounded-lg border border-forest-200 bg-white px-3 py-2 text-forest-900 focus:outline-none focus:ring-2 focus:ring-forest-500/30 focus:border-forest-500"
             value={selectedBrand}
             onChange={e => {
               setSelectedBrand(e.target.value);
@@ -961,7 +1014,7 @@ function DeviceSelectionStep(props: {
         <label className="space-y-1">
           <span className="font-medium">Model *</span>
           <select
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+            className="w-full rounded-lg border border-forest-200 bg-white px-3 py-2 text-forest-900 focus:outline-none focus:ring-2 focus:ring-forest-500/30 focus:border-forest-500"
             value={selectedModel}
             onChange={e => {
               setSelectedModel(e.target.value);
@@ -986,7 +1039,7 @@ function DeviceSelectionStep(props: {
               Variant (for example: Dual Sim, Graphics Processing Unit, Processor)
             </span>
             <select
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+            className="w-full rounded-lg border border-forest-200 bg-white px-3 py-2 text-forest-900 focus:outline-none focus:ring-2 focus:ring-forest-500/30 focus:border-forest-500"
               value={selectedVariant}
               onChange={e => {
                 setSelectedVariant(e.target.value);
@@ -1008,7 +1061,7 @@ function DeviceSelectionStep(props: {
         <label className="space-y-1 md:col-span-2">
           <span className="font-medium">Storage / random access memory *</span>
           <select
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+            className="w-full rounded-lg border border-forest-200 bg-white px-3 py-2 text-forest-900 focus:outline-none focus:ring-2 focus:ring-forest-500/30 focus:border-forest-500"
             value={selectedStorageRam}
             onChange={e => setSelectedStorageRam(e.target.value)}
             disabled={!selectedModel}
@@ -1031,11 +1084,10 @@ function DeviceSelectionStep(props: {
                 key={g}
                 type="button"
                 onClick={() => setSelectedGrade(g)}
-                className={`rounded-full px-4 py-2 text-sm ${
-                  selectedGrade === g
-                    ? "bg-forest-600 text-white"
-                    : "border border-white/20 text-white/80"
-                }`}
+                className={`rounded-full px-4 py-2 text-sm ${selectedGrade === g
+                  ? "bg-forest-600 text-white"
+                  : "border border-forest-200 text-forest-800 bg-white hover:bg-forest-50"
+                  }`}
               >
                 Grade {g}
               </button>

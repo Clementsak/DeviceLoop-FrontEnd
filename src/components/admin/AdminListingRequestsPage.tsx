@@ -52,6 +52,8 @@ export default function AdminListingRequestsPage() {
     () => items.find(it => it.listingId === selectedId) || null,
     [items, selectedId]
   );
+  const isPending = selectedRow?.status === "unverified";
+
 
   // load table
   async function loadTable() {
@@ -130,6 +132,11 @@ export default function AdminListingRequestsPage() {
   }, [selectedId]);
 
   async function handleApprove() {
+    if (selectedRow?.status !== "unverified") {
+      setDecisionError("You can only approve or reject listings that are pending.");
+      return;
+    }
+
     if (!selectedId || !detail) return;
     setDecisionLoading(true);
     setDecisionError(null);
@@ -164,6 +171,11 @@ export default function AdminListingRequestsPage() {
   }
 
   async function handleReject() {
+    if (selectedRow?.status !== "unverified") {
+      setDecisionError("You can only approve or reject listings that are pending.");
+      return;
+    }
+
     if (!selectedId) return;
     setDecisionLoading(true);
     setDecisionError(null);
@@ -385,15 +397,13 @@ export default function AdminListingRequestsPage() {
                       detail?.initialMin ??
                       selectedRow.initialMin
                     ) != null &&
-                    (
-                      detail?.initialMax ??
-                      selectedRow.initialMax
-                    ) != null
-                      ? `RM ${
-                          detail?.initialMin ?? selectedRow.initialMin
-                        } – ${
-                          detail?.initialMax ?? selectedRow.initialMax
-                        }`
+                      (
+                        detail?.initialMax ??
+                        selectedRow.initialMax
+                      ) != null
+                      ? `RM ${detail?.initialMin ?? selectedRow.initialMin
+                      } – ${detail?.initialMax ?? selectedRow.initialMax
+                      }`
                       : "—"}
                   </div>
                 </div>
@@ -409,15 +419,13 @@ export default function AdminListingRequestsPage() {
                       detail?.finalMin ??
                       selectedRow.finalMin
                     ) != null &&
-                    (
-                      detail?.finalMax ??
-                      selectedRow.finalMax
-                    ) != null
-                      ? `RM ${
-                          detail?.finalMin ?? selectedRow.finalMin
-                        } – ${
-                          detail?.finalMax ?? selectedRow.finalMax
-                        }`
+                      (
+                        detail?.finalMax ??
+                        selectedRow.finalMax
+                      ) != null
+                      ? `RM ${detail?.finalMin ?? selectedRow.finalMin
+                      } – ${detail?.finalMax ?? selectedRow.finalMax
+                      }`
                       : "—"}
                   </div>
                 </div>
@@ -438,8 +446,8 @@ export default function AdminListingRequestsPage() {
                             ? "Yes"
                             : "No"
                           : Array.isArray(v)
-                          ? v.join(", ")
-                          : String(v)}
+                            ? v.join(", ")
+                            : String(v)}
                       </span>
                     </div>
                   ))}
@@ -450,48 +458,56 @@ export default function AdminListingRequestsPage() {
               <div className="border rounded-lg p-3 text-sm space-y-3">
                 <div className="font-semibold mb-1">Decision</div>
 
-                {decisionError && (
-                  <div className="rounded bg-red-100 text-red-800 px-2 py-1 text-xs">
-                    {decisionError}
+                {!isPending ? (
+                  <div className="rounded bg-gray-100 text-gray-700 px-2 py-2 text-xs">
+                    This listing is <b>{selectedRow?.status ?? "unknown"}</b>. Approve and Reject are only available while the listing is pending.
                   </div>
-                )}
-                {decisionSuccess && (
-                  <div className="rounded bg-emerald-100 text-emerald-800 px-2 py-1 text-xs">
-                    {decisionSuccess}
-                  </div>
-                )}
+                ) : (
+                  <>
 
-                <div className="grid md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs mb-1">Final grade</label>
-                    <select
-                      className="w-full border rounded px-2 py-1 text-xs"
-                      value={finalGrade}
-                      onChange={e => setFinalGrade(e.target.value)}
-                    >
-                      {GRADE_OPTIONS.map(opt => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="text-xs text-gray-600 flex flex-col justify-center">
-                    <span className="font-semibold mb-1">Final min (RM)</span>
-                    <span>
-                      Will be set from platform price range for the selected
-                      grade.
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-600 flex flex-col justify-center">
-                    <span className="font-semibold mb-1">Final max (RM)</span>
-                    <span>
-                      Will be set from platform price range for the selected
-                      grade.
-                    </span>
-                  </div>
-                </div>
+                    {decisionError && (
+                      <div className="rounded bg-red-100 text-red-800 px-2 py-1 text-xs">
+                        {decisionError}
+                      </div>
+                    )}
+                    {decisionSuccess && (
+                      <div className="rounded bg-emerald-100 text-emerald-800 px-2 py-1 text-xs">
+                        {decisionSuccess}
+                      </div>
+                    )}
 
+                    <div className="grid md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs mb-1">Final grade</label>
+                        <select
+                          className="w-full border rounded px-2 py-1 text-xs"
+                          value={finalGrade}
+                          onChange={e => setFinalGrade(e.target.value)}
+                        >
+                          {GRADE_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="text-xs text-gray-600 flex flex-col justify-center">
+                        <span className="font-semibold mb-1">Final min (RM)</span>
+                        <span>
+                          Will be set from platform price range for the selected
+                          grade.
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600 flex flex-col justify-center">
+                        <span className="font-semibold mb-1">Final max (RM)</span>
+                        <span>
+                          Will be set from platform price range for the selected
+                          grade.
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div>
                   <label className="block text-xs mb-1">
                     Reason / notes (optional, required for rejection)
@@ -505,6 +521,7 @@ export default function AdminListingRequestsPage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-1">
+
                   <button
                     type="button"
                     className="px-3 py-1.5 rounded border border-red-500 text-red-600 text-xs"
@@ -513,6 +530,7 @@ export default function AdminListingRequestsPage() {
                   >
                     {decisionLoading ? "Working…" : "Reject"}
                   </button>
+
                   <button
                     type="button"
                     className="px-3 py-1.5 rounded bg-emerald-600 text-white text-xs"

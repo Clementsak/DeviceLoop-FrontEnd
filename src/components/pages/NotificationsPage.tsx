@@ -43,30 +43,31 @@ export default function NotificationsPage() {
       setUnreadCount(0);
     } catch (err: any) {
       console.error(err);
-      alert(err?.message ?? "Failed to mark as read.");
+      setError(err?.message ?? "Failed to mark as read.");
     }
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 text-white space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 text-slate-900 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
         <div>
           <h1 className="text-2xl font-semibold">Notifications</h1>
-          <p className="text-white/60 text-sm">
+          <p className="text-slate-600 text-sm">
             Updates about your bids and listings.
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={load}
-            className="px-4 py-2 rounded-xl bg-white/10 hover:bg:white/15 text-sm"
+            className="px-4 py-2 rounded-xl border border-forest-200 bg-white text-forest-800 hover:bg-forest-50 text-sm disabled:opacity-50"
             disabled={loading}
           >
             {loading ? "Refreshing..." : "Refresh"}
           </button>
           <button
             onClick={markAllRead}
-            className="px-4 py-2 rounded-xl bg-forest-600 hover:bg-forest-500 text-sm disabled:opacity-40"
+            className="px-4 py-2 rounded-xl bg-forest-700 text-white hover:bg-forest-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={unreadCount === 0}
           >
             Mark all read
@@ -78,7 +79,7 @@ export default function NotificationsPage() {
 
       <div className="space-y-2">
         {items.length === 0 && !loading && (
-          <div className="text-white/60 text-sm">
+          <div className="text-slate-600 text-sm">
             You have no notifications yet.
           </div>
         )}
@@ -86,9 +87,11 @@ export default function NotificationsPage() {
         {items.map(n => (
           <div
             key={n.id}
-            className={`rounded-2xl px-4 py-3 bg-slate-900/80 border ${
-              n.isRead ? "border-transparent" : "border-forest-500"
-            } flex items-start gap-3`}
+            className={`rounded-2xl px-4 py-3 border ${n.isRead
+                ? "bg-white border-slate-200"
+                : "bg-forest-50 border-forest-300"
+              } flex items-start gap-3`}
+
           >
             <div className="mt-1">
               {!n.isRead && (
@@ -98,11 +101,11 @@ export default function NotificationsPage() {
             <div className="flex-1">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-semibold text-sm">{n.title}</h2>
-                <span className="text-xs text-white/50">
+                <span className="text-xs text-slate-500">
                   {formatDateTime(n.createdAt)}
                 </span>
               </div>
-              <p className="text-sm text-white/80 mt-1">{n.message}</p>
+              <p className="text-sm text-slate-700 mt-1">{n.message}</p>
             </div>
           </div>
         ))}

@@ -4,6 +4,7 @@ import VerifyQueuePage from "./VerifyQueuePage";
 import AdminDevicesPage from "./AdminDevicesPage";
 import AdminPricesPage from "./AdminPricesPage";
 import AdminListingRequestsPage from "./AdminListingRequestsPage";
+import AdminOrdersPage from "./AdminOrdersPage";
 
 export default function AdminApp() {
   return (
@@ -17,6 +18,8 @@ export default function AdminApp() {
           <NavLink to="/admin/devices" className={({ isActive }) => isActive ? "underline" : ""}>Devices</NavLink>
           <NavLink to="/admin/prices" className={({ isActive }) => isActive ? "underline" : ""}>Prices</NavLink>
           <NavLink to="/admin/listing" className={({ isActive }) => isActive ? "underline" : ""}>Verification</NavLink>
+          <NavLink to="/admin/orders" className={({ isActive }) => isActive ? "underline" : ""}>Orders</NavLink>
+
         </nav>
       </header>
 
@@ -28,6 +31,7 @@ export default function AdminApp() {
         <Route path="devices" element={<AdminDevicesPage />} />
         <Route path="prices" element={<AdminPricesPage />} />
         <Route path="listing" element={<AdminListingRequestsPage />} />
+        <Route path="orders" element={<AdminOrdersPage />} />
         <Route index element={<UsersPage />} />
       </Routes>
     </div>

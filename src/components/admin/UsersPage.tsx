@@ -9,7 +9,7 @@ type Verified = "pending" | "verified" | "rejected";
 
 export default function UsersPage() {
   const [q, setQ] = useState("");
-  const [role, setRole] = useState<Role | "">("");
+  const [role, setRole] = useState<Role | "">("buyers");
   const [verified, setVerified] = useState<Verified | "">("");
   const [limit, setLimit] = useState(25);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -46,33 +46,32 @@ export default function UsersPage() {
       {/* Filters */}
       <div className="grid md:grid-cols-5 gap-3">
         <input
-          className="rounded bg-white/10 px-3 py-2 md:col-span-2"
+  className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 md:col-span-2"
           placeholder="Search USER#001 or email"
           value={q} onChange={e => setQ(e.target.value)}
         />
-        <select className="rounded bg-white/10 px-3 py-2"
+        <select className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-slate-900"
           value={role} onChange={e => setRole(e.target.value as Role | "")}>
-          <option value="">All roles</option>
           <option value="buyers">buyers</option>
           <option value="sellers">sellers</option>
           <option value="admin">admin</option>
         </select>
-        <select className="rounded bg-white/10 px-3 py-2"
+        <select className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-slate-900"
           value={verified} onChange={e => setVerified(e.target.value as Verified | "")}>
           <option value="">All statuses</option>
           <option value="pending">pending</option>
           <option value="verified">verified</option>
           <option value="rejected">rejected</option>
         </select>
-        <select className="rounded bg-white/10 px-3 py-2"
+        <select className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-slate-900"
           value={limit} onChange={e => setLimit(parseInt(e.target.value))}>
           {[10,25,50,100].map(n => <option key={n} value={n}>{n}/page</option>)}
         </select>
       </div>
 
       {/* Table */}
-      <div className="overflow-auto rounded-xl border border-white/10">
-        <table className="w-full text-sm">
+<div className="rounded-2xl border border-emerald-100 bg-white/80 overflow-x-auto">
+        <table className="min-w-[900px] w-full text-sm text-slate-900">
           <thead className="bg-white/5">
             <tr className="text-left">
               <th className="p-3 w-[160px]">UserID</th>
@@ -85,7 +84,7 @@ export default function UsersPage() {
           </thead>
           <tbody>
             {rows.map(u => (
-              <tr key={u.user_pk} className="border-t border-white/10">
+              <tr key={u.user_pk} className="border-t border-slate-100">
                 <td className="p-3 font-mono">{u.user_pk}</td>
                 <td className="p-3">{u.email ?? "-"}</td>
                 <td className="p-3">
@@ -97,7 +96,7 @@ export default function UsersPage() {
                 <td className="p-3">{u.lastLogin ? new Date(u.lastLogin).toLocaleString() : "-"}</td>
                 <td className="p-3 text-right">
                   <button
-                    className="px-3 py-1 rounded bg-red-700 hover:bg-red-600"
+                    className="rounded-lg bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700 disabled:opacity-50"
                     onClick={() => {
                       if (confirm(`Delete ${u.user_pk}?`)) {
                         adminDeleteUser(u.user_pk).then(() => fetchPage(cursor));

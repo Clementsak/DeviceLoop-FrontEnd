@@ -1,5 +1,6 @@
 // src/components/api/admin.ts
 const API = import.meta.env.VITE_API_BASE ?? "https://localhost:5000";
+import { api_get, api_post } from "../api";
 
 export type Role = "buyers" | "sellers" | "admin";
 export type Verified = "pending" | "verified" | "rejected";
@@ -114,4 +115,33 @@ export async function adminVerifyDecision(
   reason?: string
 ) {
   return post(`/admin/verify/${encodeURIComponent(user_pk)}/decision`, { type: kind, decision, reason });
+}
+
+export type AdminOrderRow = {
+  listingId: string;
+  marketKey?: string;
+  sellerPk?: string;
+  buyerPk?: string;
+  brand?: string;
+  model?: string;
+  variant?: string;
+  grade?: string;
+  paymentStatus: "pending" | "paid";
+  paidAt?: string | null;
+  tradePrice?: number;
+  listingStatus?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export async function adminGetOrders(
+  paymentStatus: "all" | "pending" | "paid" = "all"
+) {
+  const qs = new URLSearchParams();
+  if (paymentStatus !== "all") qs.set("paymentStatus", paymentStatus);
+
+  const suffix = qs.toString();
+  const path = suffix ? `/admin/orders?${suffix}` : "/admin/orders";
+
+  return get<{ ok: boolean; items: AdminOrderRow[] }>(path);
 }

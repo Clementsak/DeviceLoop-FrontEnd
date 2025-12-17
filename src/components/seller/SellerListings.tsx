@@ -1,10 +1,18 @@
 // src/components/seller/SellerListings.tsx
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate} from "react-router-dom";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "https://localhost:5000";
 
-type ListingStatus = "active" | "ended" | "unverified" | "verified" | "rejected" | "cancelled";
+type ListingStatus =
+  | "pending"
+  | "unverified"
+  | "verified"
+  | "rejected"
+  | "cancelled"
+  | "active"
+  | "ended"
+  | "expired";
 
 type AuctionMode = "continuous" | "interval" | "end_of_window";
 
@@ -47,6 +55,8 @@ type ListingOverviewResponse = {
   listings: ListingItem[];
 };
 
+
+
 export function SellerListings() {
   const [requests, setRequests] = useState<ListingItem[]>([]);
   const [listings, setListings] = useState<ListingItem[]>([]);
@@ -61,6 +71,31 @@ export function SellerListings() {
   const [busy, setBusy] = useState(false);
   const [rejectedTarget, setRejectedTarget] = useState<ListingItem | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const navigate = useNavigate();
+const goToDetails = (listingId: string) => {
+  navigate(`/listings/${encodeURIComponent(listingId)}`);
+};
+  const [listingFilter, setListingFilter] = useState<"active" | "matched" | "expired" | "ended" | "all">("active");
+const [requestFilter, setRequestFilter] = useState<"pending" | "unverified" | "verified" | "rejected" | "cancelled" | "all">("unverified");
+
+const filteredRequests = requestFilter === "all"
+  ? requests
+  : requests.filter(item => item.Status === requestFilter);
+
+const filteredListings = (() => {
+  if (listingFilter === "all") return listings;
+
+  if (listingFilter === "active") return listings.filter(l => l.Status === "active");
+
+  if (listingFilter === "expired") return listings.filter(l => l.Status === "expired");
+
+  if (listingFilter === "ended") return listings.filter(l => l.Status === "ended");
+
+  // "matched"
+  // Minimal logic: treat "ended" + has a buyer as matched (see optional backend improvement below)
+// "matched" (minimal definition): ended + has a highest bidder
+return listings.filter(item => item.Status === "ended" && !!item.CurrentHighestBidderPK);
+})();
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -254,22 +289,40 @@ export function SellerListings() {
           {/* Ongoing listings */}
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">Ongoing listings</h2>
+            <div className="flex items-center gap-2 mb-3">
+  <label className="text-sm text-gray-700">Listing status</label>
+  <select
+    className="border rounded px-2 py-1"
+    value={listingFilter}
+    onChange={(e) => setListingFilter(e.target.value as any)}
+  >
+    <option value="active">Active (ongoing)</option>
+    <option value="matched">Matched</option>
+    <option value="expired">Expired</option>
+    <option value="ended">Ended</option>
+    <option value="all">All</option>
+  </select>
+</div>
             <div className="overflow-x-auto rounded-xl border bg-white">
+              
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
                   <tr>
                     <th className="px-3 py-2">Category</th>
                     <th className="px-3 py-2">Device</th>
                     <th className="px-3 py-2">Grade</th>
+                    <th className="text-left py-2 px-3">Auction mode</th>
                     <th className="px-3 py-2">Seller price range</th>
                     <th className="px-3 py-2">Status</th>
                     <th className="px-3 py-2">Duration</th>
                     <th className="px-3 py-2">Highest bid</th>
                     <th className="px-3 py-2">Highest bidder</th>
+                    <th className="px-3 py-2">Actions</th>
+
                   </tr>
                 </thead>
                 <tbody>
-                  {listings.map(item => {
+                  {filteredListings.map(item => {
                     const grade = item.FinalGrade ?? item.InitialGrade ?? "-";
                     const priceRange =
                       typeof item.SellerMin === "number" && typeof item.SellerMax === "number"
@@ -285,12 +338,21 @@ export function SellerListings() {
                         <td className="px-3 py-2">{item.Category}</td>
                         <td className="px-3 py-2">{formatDevice(item)}</td>
                         <td className="px-3 py-2">{grade}</td>
+                        <td className="py-2 px-3">{item.AuctionMode}</td>
                         <td className="px-3 py-2">{priceRange}</td>
                         <td className="px-3 py-2 capitalize">{item.Status}</td>
                         <td className="px-3 py-2">{formatCountdown(item, nowMs)}</td>
                         <td className="px-3 py-2">{highestBid}</td>
                         <td className="px-3 py-2">
                           {item.CurrentHighestBidderPK ? maskUser(item.CurrentHighestBidderPK) : "-"}
+                        </td>
+                        <td className="px-3 py-2">
+                          <button
+  className="px-3 py-1 rounded bg-emerald-700 text-white hover:bg-emerald-800"
+  onClick={() => goToDetails(item.ListingId)}
+>
+  View details
+</button>
                         </td>
                       </tr>
                     );
@@ -310,7 +372,25 @@ export function SellerListings() {
           {/* Listing requests */}
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">Listing requests</h2>
+            <div className="flex items-center gap-2 mb-3">
+  <label className="text-sm text-gray-700">Listing status</label>
+  <select
+  className="border rounded px-2 py-1"
+  value={requestFilter}
+  onChange={(e) => setRequestFilter(e.target.value as any)}
+>
+  <option value="pending">Pending</option>
+  <option value="unverified">Unverified</option>
+  <option value="verified">Verified</option>
+  <option value="rejected">Rejected</option>
+  <option value="cancelled">Cancelled</option>
+  <option value="all">All</option>
+</select>
+
+</div>
             <div className="overflow-x-auto rounded-xl border bg-white">
+              
+
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
                   <tr>
@@ -325,7 +405,7 @@ export function SellerListings() {
                   </tr>
                 </thead>
                 <tbody>
-                  {requests.map(item => {
+                  {filteredRequests.map(item => {
                     const rawMin = item.FinalMin ?? item.InitialMin;
                     const rawMax = item.FinalMax ?? item.InitialMax;
 
@@ -402,7 +482,7 @@ export function SellerListings() {
                   })}
                   {requests.length === 0 && (
                     <tr>
-                      <td className="px-3 py-4 text-sm text-gray-500" colSpan={8}>
+                      <td className="px-3 py-4 text-sm text-gray-500" colSpan={10}>
                         You do not have any listing requests yet.
                       </td>
                     </tr>
