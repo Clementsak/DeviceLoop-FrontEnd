@@ -1,6 +1,6 @@
 // src/components/buyer/PlaceBidDialog.tsx
 import { useMemo, useState } from "react";
-import { computeBidState, type BidStateMode } from "../../utils/bidding";
+import { computeBidState, } from "../../utils/bidding";
 
 type PlaceBidDialogProps = {
   isOpen: boolean;

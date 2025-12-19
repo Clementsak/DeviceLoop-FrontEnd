@@ -1,5 +1,4 @@
 // PhotoZoomModal.tsx
-import React from "react";
 
 type PhotoZoomModalProps = {
   photoUrl: string | null;

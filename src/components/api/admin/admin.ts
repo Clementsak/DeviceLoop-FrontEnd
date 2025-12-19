@@ -1,6 +1,5 @@
 // src/components/api/admin.ts
 const API = import.meta.env.VITE_API_BASE ?? "https://localhost:5000";
-import { api_get, api_post } from "../api";
 
 export type Role = "buyers" | "sellers" | "admin";
 export type Verified = "pending" | "verified" | "rejected";

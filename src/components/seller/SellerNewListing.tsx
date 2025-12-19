@@ -13,7 +13,6 @@ import {
   signUploadUrl,
   createListingRequest,
   type QuestionnairePayload,
-  type PhotoKey,
 } from "../api/seller";
 import { useNavigate } from "react-router-dom";
 
