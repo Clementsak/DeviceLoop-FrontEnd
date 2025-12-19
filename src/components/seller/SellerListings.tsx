@@ -303,70 +303,145 @@ return listings.filter(item => item.Status === "ended" && !!item.CurrentHighestB
     <option value="all">All</option>
   </select>
 </div>
-            <div className="overflow-x-auto rounded-xl border bg-white">
-              
-              <table className="min-w-full text-left text-sm">
-                <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
-                  <tr>
-                    <th className="px-3 py-2">Category</th>
-                    <th className="px-3 py-2">Device</th>
-                    <th className="px-3 py-2">Grade</th>
-                    <th className="text-left py-2 px-3">Auction mode</th>
-                    <th className="px-3 py-2">Seller price range</th>
-                    <th className="px-3 py-2">Status</th>
-                    <th className="px-3 py-2">Duration</th>
-                    <th className="px-3 py-2">Highest bid</th>
-                    <th className="px-3 py-2">Highest bidder</th>
-                    <th className="px-3 py-2">Actions</th>
+            {/* Mobile cards */}
+<div className="space-y-3 md:hidden">
+  {filteredListings.map((item) => {
+    const grade = item.FinalGrade ?? item.InitialGrade ?? "-";
+    const priceRange =
+      typeof item.SellerMin === "number" && typeof item.SellerMax === "number"
+        ? `RM ${item.SellerMin.toFixed(2)} – RM ${item.SellerMax.toFixed(2)}`
+        : "-";
+    const highestBid =
+      typeof item.CurrentHighestBid === "number"
+        ? `RM ${item.CurrentHighestBid.toFixed(2)}`
+        : "-";
 
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredListings.map(item => {
-                    const grade = item.FinalGrade ?? item.InitialGrade ?? "-";
-                    const priceRange =
-                      typeof item.SellerMin === "number" && typeof item.SellerMax === "number"
-                        ? `RM ${item.SellerMin.toFixed(2)} – RM ${item.SellerMax.toFixed(2)}`
-                        : "-";
-                    const highestBid =
-                      typeof item.CurrentHighestBid === "number"
-                        ? `RM ${item.CurrentHighestBid.toFixed(2)}`
-                        : "-";
-
-                    return (
-                      <tr key={item.ListingId} className="border-b last:border-0">
-                        <td className="px-3 py-2">{item.Category}</td>
-                        <td className="px-3 py-2">{formatDevice(item)}</td>
-                        <td className="px-3 py-2">{grade}</td>
-                        <td className="py-2 px-3">{item.AuctionMode}</td>
-                        <td className="px-3 py-2">{priceRange}</td>
-                        <td className="px-3 py-2 capitalize">{item.Status}</td>
-                        <td className="px-3 py-2">{formatCountdown(item, nowMs)}</td>
-                        <td className="px-3 py-2">{highestBid}</td>
-                        <td className="px-3 py-2">
-                          {item.CurrentHighestBidderPK ? maskUser(item.CurrentHighestBidderPK) : "-"}
-                        </td>
-                        <td className="px-3 py-2">
-                          <button
-  className="px-3 py-1 rounded bg-emerald-700 text-white hover:bg-emerald-800"
-  onClick={() => goToDetails(item.ListingId)}
->
-  View details
-</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {listings.length === 0 && (
-                    <tr>
-                      <td className="px-3 py-4 text-sm text-gray-500" colSpan={8}>
-                        You do not have any active or ended listings yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+    return (
+      <div
+        key={item.ListingId}
+        className="rounded-2xl border border-forest-200 bg-white p-4 shadow-sm"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="font-semibold text-forest-900">{formatDevice(item)}</div>
+            <div className="mt-0.5 text-xs text-forest-700">
+              {item.Category} • Grade {grade}
             </div>
+          </div>
+          <span className="inline-flex items-center rounded-full bg-forest-100 px-2.5 py-1 text-xs font-semibold text-forest-800 ring-1 ring-forest-200 capitalize">
+            {item.Status}
+          </span>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-xs font-semibold text-forest-700">Auction mode</div>
+            <div className="text-forest-900">{item.AuctionMode ?? "-"}</div>
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-forest-700">Duration</div>
+            <div className="text-forest-900">{formatCountdown(item, nowMs)}</div>
+          </div>
+          <div className="col-span-2">
+            <div className="text-xs font-semibold text-forest-700">Seller price range</div>
+            <div className="text-forest-900">{priceRange}</div>
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-forest-700">Highest bid</div>
+            <div className="text-forest-900">{highestBid}</div>
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-forest-700">Highest bidder</div>
+            <div className="text-forest-900">
+              {item.CurrentHighestBidderPK ? maskUser(item.CurrentHighestBidderPK) : "-"}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <button
+            className="w-full rounded-xl bg-forest-500 px-4 py-2 text-sm font-semibold text-white hover:bg-forest-600"
+            onClick={() => goToDetails(item.ListingId)}
+          >
+            View details
+          </button>
+        </div>
+      </div>
+    );
+  })}
+
+  {filteredListings.length === 0 && (
+    <div className="rounded-2xl border border-forest-200 bg-white p-4 text-sm text-forest-700">
+      You do not have any active or ended listings yet.
+    </div>
+  )}
+</div>
+
+{/* Desktop table */}
+<div className="hidden md:block overflow-x-auto rounded-2xl border border-forest-200 bg-white shadow-sm">
+  <table className="min-w-full text-left text-sm">
+    <thead className="border-b bg-forest-50 text-xs uppercase text-forest-700">
+      <tr>
+        <th className="px-3 py-2">Category</th>
+        <th className="px-3 py-2">Device</th>
+        <th className="px-3 py-2">Grade</th>
+        <th className="px-3 py-2">Auction mode</th>
+        <th className="px-3 py-2">Seller price range</th>
+        <th className="px-3 py-2">Status</th>
+        <th className="px-3 py-2">Duration</th>
+        <th className="px-3 py-2">Highest bid</th>
+        <th className="px-3 py-2">Highest bidder</th>
+        <th className="px-3 py-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filteredListings.map((item) => {
+        const grade = item.FinalGrade ?? item.InitialGrade ?? "-";
+        const priceRange =
+          typeof item.SellerMin === "number" && typeof item.SellerMax === "number"
+            ? `RM ${item.SellerMin.toFixed(2)} – RM ${item.SellerMax.toFixed(2)}`
+            : "-";
+        const highestBid =
+          typeof item.CurrentHighestBid === "number"
+            ? `RM ${item.CurrentHighestBid.toFixed(2)}`
+            : "-";
+
+        return (
+          <tr key={item.ListingId} className="border-b last:border-0">
+            <td className="px-3 py-2">{item.Category}</td>
+            <td className="px-3 py-2">{formatDevice(item)}</td>
+            <td className="px-3 py-2">{grade}</td>
+            <td className="px-3 py-2">{item.AuctionMode ?? "-"}</td>
+            <td className="px-3 py-2">{priceRange}</td>
+            <td className="px-3 py-2 capitalize">{item.Status}</td>
+            <td className="px-3 py-2">{formatCountdown(item, nowMs)}</td>
+            <td className="px-3 py-2">{highestBid}</td>
+            <td className="px-3 py-2">
+              {item.CurrentHighestBidderPK ? maskUser(item.CurrentHighestBidderPK) : "-"}
+            </td>
+            <td className="px-3 py-2">
+              <button
+                className="rounded-xl bg-forest-500 px-3 py-2 text-sm font-semibold text-white hover:bg-forest-600"
+                onClick={() => goToDetails(item.ListingId)}
+              >
+                View details
+              </button>
+            </td>
+          </tr>
+        );
+      })}
+
+      {filteredListings.length === 0 && (
+        <tr>
+          <td className="px-3 py-4 text-sm text-forest-700" colSpan={10}>
+            You do not have any active or ended listings yet.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
           </section>
 
           {/* Listing requests */}
@@ -388,108 +463,216 @@ return listings.filter(item => item.Status === "ended" && !!item.CurrentHighestB
 </select>
 
 </div>
-            <div className="overflow-x-auto rounded-xl border bg-white">
-              
+            {/* Mobile cards */}
+<div className="space-y-3 md:hidden">
+  {filteredRequests.map((item) => {
+    const rawMin = item.FinalMin ?? item.InitialMin;
+    const rawMax = item.FinalMax ?? item.InitialMax;
 
-              <table className="min-w-full text-left text-sm">
-                <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
-                  <tr>
-                    <th className="px-3 py-2">Category</th>
-                    <th className="px-3 py-2">Device</th>
-                    <th className="px-3 py-2">Initial grade</th>
-                    <th className="px-3 py-2">Verified grade</th>
-                    <th className="px-3 py-2">Platform price range</th>
-                    <th className="px-3 py-2">Status</th>
-                    <th className="px-3 py-2">Round</th>
-                    <th className="px-3 py-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRequests.map(item => {
-                    const rawMin = item.FinalMin ?? item.InitialMin;
-                    const rawMax = item.FinalMax ?? item.InitialMax;
+    const platformMin = rawMin !== undefined && rawMin !== null ? Number(rawMin) : null;
+    const platformMax = rawMax !== undefined && rawMax !== null ? Number(rawMax) : null;
 
-                    const platformMin =
-                      rawMin !== undefined && rawMin !== null ? Number(rawMin) : null;
-                    const platformMax =
-                      rawMax !== undefined && rawMax !== null ? Number(rawMax) : null;
+    const priceRange =
+      platformMin !== null &&
+      !Number.isNaN(platformMin) &&
+      platformMax !== null &&
+      !Number.isNaN(platformMax)
+        ? `RM ${platformMin.toFixed(2)} – RM ${platformMax.toFixed(2)}`
+        : "-";
 
-                    const priceRange =
-                      platformMin !== null &&
-                        !Number.isNaN(platformMin) &&
-                        platformMax !== null &&
-                        !Number.isNaN(platformMax)
-                        ? `RM ${platformMin.toFixed(2)} – RM ${platformMax.toFixed(2)}`
-                        : "-";
+    const round = item.ReviewRound ?? 1;
+    const canRequestReview = item.Status === "verified" && round < 3;
+    const canAccept = item.Status === "verified";
+    const canCancel = item.Status === "unverified" || item.Status === "verified";
 
-                    const round = item.ReviewRound ?? 1;
-                    const canRequestReview = item.Status === "verified" && round < 3;
-                    const canAccept = item.Status === "verified";
-                    const canCancel = item.Status === "unverified" || item.Status === "verified";
+    return (
+      <div
+        key={item.ListingId}
+        className="rounded-2xl border border-forest-200 bg-white p-4 shadow-sm"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="font-semibold text-forest-900">{formatDevice(item)}</div>
+            <div className="mt-0.5 text-xs text-forest-700">{item.Category}</div>
+          </div>
+          <span className="inline-flex items-center rounded-full bg-forest-100 px-2.5 py-1 text-xs font-semibold text-forest-800 ring-1 ring-forest-200 capitalize">
+            {item.Status}
+          </span>
+        </div>
 
-                    return (
-                      <tr key={item.ListingId} className="border-b last:border-0">
-                        <td className="px-3 py-2">{item.Category}</td>
-                        <td className="px-3 py-2">{formatDevice(item)}</td>
-                        <td className="px-3 py-2">{item.InitialGrade ?? "-"}</td>
-                        <td className="px-3 py-2">{item.FinalGrade ?? "-"}</td>
-                        <td className="px-3 py-2">{priceRange}</td>
-                        <td className="px-3 py-2 capitalize">{item.Status}</td>
-                        <td className="px-3 py-2">{round}</td>
-                        <td className="px-3 py-2">
-                          <div className="flex flex-wrap gap-2 text-xs">
-                            {canAccept && (
-                              <button
-                                className="rounded-full bg-forest-500 px-3 py-1 font-medium text-white hover:bg-forest-600"
-                                onClick={() => openAcceptModal(item)}
-                                disabled={busy}
-                              >
-                                Accept & list
-                              </button>
-                            )}
-                            {canRequestReview && (
-                              <button
-                                className="rounded-full border px-3 py-1 text-gray-700 hover:bg-gray-50"
-                                onClick={() => requestReview(item.ListingId, item.ReviewRound)}
-                                disabled={busy}
-                              >
-                                Request another review
-                              </button>
-                            )}
-                            {canCancel && (
-                              <button
-                                className="rounded-full border border-red-300 px-3 py-1 text-red-600 hover:bg-red-50"
-                                onClick={() => cancelRequest(item.ListingId)}
-                                disabled={busy}
-                              >
-                                Cancel
-                              </button>
-                            )}
-                            {item.Status === "rejected" && (
-                              <button
-                                type="button"
-                                className="rounded-full bg-red-50 px-3 py-1 text-red-700 hover:bg-red-100"
-                                onClick={() => setRejectedTarget(item)}
-                                disabled={busy}
-                              >
-                                Rejected
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {requests.length === 0 && (
-                    <tr>
-                      <td className="px-3 py-4 text-sm text-gray-500" colSpan={10}>
-                        You do not have any listing requests yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-xs font-semibold text-forest-700">Initial grade</div>
+            <div className="text-forest-900">{item.InitialGrade ?? "-"}</div>
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-forest-700">Verified grade</div>
+            <div className="text-forest-900">{item.FinalGrade ?? "-"}</div>
+          </div>
+          <div className="col-span-2">
+            <div className="text-xs font-semibold text-forest-700">Platform price range</div>
+            <div className="text-forest-900">{priceRange}</div>
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-forest-700">Round</div>
+            <div className="text-forest-900">{round}</div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-2">
+          {canAccept && (
+            <button
+              className="w-full rounded-xl bg-forest-500 px-4 py-2 text-sm font-semibold text-white hover:bg-forest-600 disabled:opacity-60"
+              onClick={() => openAcceptModal(item)}
+              disabled={busy}
+            >
+              Accept and list
+            </button>
+          )}
+
+          {canRequestReview && (
+            <button
+              className="w-full rounded-xl border border-forest-200 bg-white px-4 py-2 text-sm font-semibold text-forest-800 hover:bg-forest-50 disabled:opacity-60"
+              onClick={() => requestReview(item.ListingId, item.ReviewRound)}
+              disabled={busy}
+            >
+              Request another review
+            </button>
+          )}
+
+          {canCancel && (
+            <button
+              className="w-full rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
+              onClick={() => cancelRequest(item.ListingId)}
+              disabled={busy}
+            >
+              Cancel
+            </button>
+          )}
+
+          {item.Status === "rejected" && (
+            <button
+              type="button"
+              className="w-full rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+              onClick={() => setRejectedTarget(item)}
+              disabled={busy}
+            >
+              Rejected
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  })}
+
+  {filteredRequests.length === 0 && (
+    <div className="rounded-2xl border border-forest-200 bg-white p-4 text-sm text-forest-700">
+      You do not have any listing requests yet.
+    </div>
+  )}
+</div>
+
+{/* Desktop table */}
+<div className="hidden md:block overflow-x-auto rounded-2xl border border-forest-200 bg-white shadow-sm">
+  <table className="min-w-full text-left text-sm">
+    <thead className="border-b bg-forest-50 text-xs uppercase text-forest-700">
+      <tr>
+        <th className="px-3 py-2">Category</th>
+        <th className="px-3 py-2">Device</th>
+        <th className="px-3 py-2">Initial grade</th>
+        <th className="px-3 py-2">Verified grade</th>
+        <th className="px-3 py-2">Platform price range</th>
+        <th className="px-3 py-2">Status</th>
+        <th className="px-3 py-2">Round</th>
+        <th className="px-3 py-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filteredRequests.map((item) => {
+        const rawMin = item.FinalMin ?? item.InitialMin;
+        const rawMax = item.FinalMax ?? item.InitialMax;
+
+        const platformMin = rawMin !== undefined && rawMin !== null ? Number(rawMin) : null;
+        const platformMax = rawMax !== undefined && rawMax !== null ? Number(rawMax) : null;
+
+        const priceRange =
+          platformMin !== null &&
+          !Number.isNaN(platformMin) &&
+          platformMax !== null &&
+          !Number.isNaN(platformMax)
+            ? `RM ${platformMin.toFixed(2)} – RM ${platformMax.toFixed(2)}`
+            : "-";
+
+        const round = item.ReviewRound ?? 1;
+        const canRequestReview = item.Status === "verified" && round < 3;
+        const canAccept = item.Status === "verified";
+        const canCancel = item.Status === "unverified" || item.Status === "verified";
+
+        return (
+          <tr key={item.ListingId} className="border-b last:border-0">
+            <td className="px-3 py-2">{item.Category}</td>
+            <td className="px-3 py-2">{formatDevice(item)}</td>
+            <td className="px-3 py-2">{item.InitialGrade ?? "-"}</td>
+            <td className="px-3 py-2">{item.FinalGrade ?? "-"}</td>
+            <td className="px-3 py-2">{priceRange}</td>
+            <td className="px-3 py-2 capitalize">{item.Status}</td>
+            <td className="px-3 py-2">{round}</td>
+            <td className="px-3 py-2">
+              <div className="flex flex-wrap gap-2 text-xs">
+                {canAccept && (
+                  <button
+                    className="rounded-xl bg-forest-500 px-3 py-2 text-sm font-semibold text-white hover:bg-forest-600 disabled:opacity-60"
+                    onClick={() => openAcceptModal(item)}
+                    disabled={busy}
+                  >
+                    Accept and list
+                  </button>
+                )}
+                {canRequestReview && (
+                  <button
+                    className="rounded-xl border border-forest-200 bg-white px-3 py-2 text-sm font-semibold text-forest-800 hover:bg-forest-50 disabled:opacity-60"
+                    onClick={() => requestReview(item.ListingId, item.ReviewRound)}
+                    disabled={busy}
+                  >
+                    Request another review
+                  </button>
+                )}
+                {canCancel && (
+                  <button
+                    className="rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
+                    onClick={() => cancelRequest(item.ListingId)}
+                    disabled={busy}
+                  >
+                    Cancel
+                  </button>
+                )}
+                {item.Status === "rejected" && (
+                  <button
+                    type="button"
+                    className="rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+                    onClick={() => setRejectedTarget(item)}
+                    disabled={busy}
+                  >
+                    Rejected
+                  </button>
+                )}
+              </div>
+            </td>
+          </tr>
+        );
+      })}
+
+      {filteredRequests.length === 0 && (
+        <tr>
+          <td className="px-3 py-4 text-sm text-forest-700" colSpan={8}>
+            You do not have any listing requests yet.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
           </section>
         </>
       )}

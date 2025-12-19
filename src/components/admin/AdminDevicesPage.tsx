@@ -108,7 +108,7 @@ export default function AdminDevicesPage() {
 
 
   return (
-    <div className="max-w-none mx-auto p-6 text-black">
+    <div className="w-full min-w-0 p-6 text-black">
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Devices</h1>
         <div className="flex gap-2">
@@ -324,7 +324,7 @@ function NewDeviceButton({ onCreated }: { onCreated: () => void }) {
   return (
     <>
       <button
-        className="px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-500"
+        className="px-3 py-2 rounded-xl bg-forest-700 text-white hover:bg-forest-600 transition"
         onClick={() => { reset(); setOpen(true); }}
       >
         + New Device
@@ -474,7 +474,7 @@ function EditDeviceButton({ row, onSaved }: { row: DeviceRow; onSaved: () => voi
   if (!open) {
     return (
       <button
-        className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-500"
+        className="px-3 py-1 rounded-xl bg-forest-700 text-white hover:bg-forest-600 transition"
         onClick={() => { resetToRow(); setOpen(true); }}
       >
         Edit
@@ -499,7 +499,7 @@ function EditDeviceButton({ row, onSaved }: { row: DeviceRow; onSaved: () => voi
           <label className="flex flex-col gap-1">
             <span className="text-sm text-gray-600">Category</span>
             <select
-              className="rounded border px-2 py-1"
+              className="rounded-xl border border-forest-200 bg-white px-3 py-2 text-sm text-forest-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-200"
               value={category}
               onChange={e => setCategory(e.target.value as any)}
             >
@@ -555,7 +555,7 @@ function EditDeviceButton({ row, onSaved }: { row: DeviceRow; onSaved: () => voi
 
         <div className="mt-5 flex justify-end gap-2">
           <button
-            className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
+            className="px-3 py-2 rounded-xl border border-forest-300 text-forest-900 hover:bg-forest-100 transition"
             onClick={() => { setOpen(false); resetToRow(); }}
           >
             Cancel

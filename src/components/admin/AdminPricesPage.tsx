@@ -94,12 +94,12 @@ export default function AdminPricesPage() {
     );
 
     return (
-        <div className="max-w-none mx-auto p-6 text-black">
+        <div className="w-full min-w-0 p-6 text-black">
             <header className="flex items-center justify-between mb-6 gap-3 flex-wrap">
                 <h1 className="text-2xl font-semibold">Prices</h1>
                 <div className="flex gap-2">
                     <button
-                        className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                        className="px-3 py-2 rounded-xl border border-forest-300 text-forest-900 hover:bg-forest-100 transition"
                         onClick={async () =>
                             download("prices.xlsx", await exportPricesTable(exportParams))
                         }
@@ -267,7 +267,7 @@ export default function AdminPricesPage() {
                                 </td>
                                 <td className="p-2">
                                     <span
-                                        className={`px-2 py-0.5 rounded text-xs ${r.active ? "bg-green-200" : "bg-red-200"
+                                        className={`px-2 py-0.5 rounded text-xs ${r.active ? "bg-forest-100 text-forest-800" : "bg-red-100 text-red-700"
                                             }`}
                                     >
                                         {r.active ? "TRUE" : "FALSE"}
@@ -293,7 +293,7 @@ export default function AdminPricesPage() {
                         ))}
                         {!rows.length && !loading && (
                             <tr>
-                                <td colSpan={12} className="p-6 text-center text-gray-500">
+                                <td colSpan={12} className="p-6 text-center text-forest-600">
                                     No rows.
                                 </td>
                             </tr>
@@ -304,19 +304,19 @@ export default function AdminPricesPage() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-3">
-                <div className="text-gray-600 text-sm">
+                <div className="text-forest-700 text-sm">
                     {cursor ? "Page (cursor set)" : "First page"}
                 </div>
                 <div className="flex gap-2">
                     <button
-                        className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                        className="px-3 py-1 rounded-xl border border-forest-300 text-forest-900 hover:bg-forest-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
                         disabled={!cursor}
                         onClick={() => fetchPage(null)}
                     >
                         Reset
                     </button>
                     <button
-                        className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                        className="px-3 py-1 rounded-xl border border-forest-300 text-forest-900 hover:bg-forest-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
                         disabled={!nextCursor}
                         onClick={() => fetchPage(nextCursor!)}
                     >
@@ -371,7 +371,7 @@ function EditPriceButton({
     if (!open) {
         return (
             <button
-                className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-500"
+                className="px-3 py-1 rounded-xl bg-forest-700 text-white hover:bg-forest-600 transition"
                 onClick={() => {
                     reset();
                     setOpen(true);
@@ -408,7 +408,7 @@ function EditPriceButton({
                 </div>
                 <div className="mt-5 flex justify-end gap-2">
                     <button
-                        className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                        className="px-3 py-2 rounded-xl border border-forest-300 text-forest-900 hover:bg-forest-100 transition"
                         onClick={() => {
                             setOpen(false);
                             reset();

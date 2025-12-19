@@ -123,11 +123,49 @@ export type SellerOrderRow = {
   updatedAt?: string;
 };
 
+export type SellerRegistrationProfile = {
+  organisationName?: string;
+  registrationNumber?: string;
+  businessEmail?: string;
+  businessPhone?: string;
+  registrationAddress?: string;
+  businessAddress?: string;
+};
+
+export type SellerStoreSettings = {
+  organisationName?: string | null;
+  organisationRegNo?: string | null;
+  address?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  website?: string | null;
+  notes?: string | null;
+  submittedAt?: string | null;
+};
+
+export type SellerRegistrationProfileResponse = {
+  ok: boolean;
+  profile: SellerRegistrationProfile;
+};
+
+export type SellerSettingsResponse = {
+  ok: boolean;
+  profile: string;
+  settings: Record<string, unknown>;
+  sellerRegistration?: SellerRegistrationProfile | null;
+};
+
 type SellerOrdersResponse = { items: SellerOrderRow[] };
 
 export const SellerAPI = {
   summary: () => api_get<SellerSummary>("/seller/summary"),
+  getSettings: () => api_get<SellerSettingsResponse>("/seller/settings"),
 
+  getStoreSettings: () => api_get<SellerStoreSettings>("/seller/settings"),
+
+  // Optional (for showing seller registration info on settings page)
+  getRegistrationProfile: () =>
+    api_get<SellerRegistrationProfileResponse>("/seller/registration-profile"),
 
   getOrders: async (opts: {
     paymentStatus?: SellerOrdersPaymentFilter;

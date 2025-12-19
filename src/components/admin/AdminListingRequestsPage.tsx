@@ -202,13 +202,13 @@ export default function AdminListingRequestsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="w-full min-w-0 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Listing requests</h1>
+        <h1 className="text-2xl font-semibold text-emerald-950">Listing requests</h1>
 
         <div className="flex gap-3 items-center">
           <select
-            className="border rounded-md px-3 py-2 text-sm"
+            className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-200"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value as StatusFilter)}
           >
@@ -219,7 +219,7 @@ export default function AdminListingRequestsPage() {
             ))}
           </select>
           <button
-            className="border rounded-md px-3 py-2 text-sm"
+            className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50 disabled:opacity-60"
             onClick={loadTable}
             disabled={loading}
           >
@@ -229,23 +229,23 @@ export default function AdminListingRequestsPage() {
       </div>
 
       {error && (
-        <div className="mb-3 rounded-md bg-red-100 text-red-800 px-3 py-2 text-sm">
+        <div className="mb-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
           {error}
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+<div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start">
         {/* LEFT: table */}
-        <div className="border rounded-xl overflow-hidden">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-100">
+        <div className="min-w-0 overflow-x-auto rounded-2xl border border-emerald-100 bg-white shadow-sm">
+          <table className="min-w-[520px] w-full text-sm text-slate-900">
+            <thead className="bg-emerald-50">
               <tr>
-                <th className="px-3 py-2 text-left">Device</th>
-                <th className="px-3 py-2 text-left">Seller</th>
-                <th className="px-3 py-2 text-left">Status</th>
-                <th className="px-3 py-2 text-left">Initial range</th>
-                <th className="px-3 py-2 text-left">Final range</th>
-                <th className="px-3 py-2 text-left">Round</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-emerald-800">Device</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-emerald-800">Seller</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-emerald-800">Status</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-emerald-800">Initial range</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-emerald-800">Final range</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-emerald-800">Round</th>
               </tr>
             </thead>
             <tbody>
@@ -287,7 +287,7 @@ export default function AdminListingRequestsPage() {
                     onClick={() => setSelectedId(it.listingId)}
                     className={
                       (isSelected ? "bg-emerald-50 " : "") +
-                      "hover:bg-gray-50 cursor-pointer"
+                      "cursor-pointer hover:bg-emerald-50/60"
                     }
                   >
                     <td className="px-3 py-2 align-top">
@@ -302,7 +302,7 @@ export default function AdminListingRequestsPage() {
                       {it.sellerPk}
                     </td>
                     <td className="px-3 py-2 align-top text-xs">
-                      <span className="inline-flex rounded-full px-2 py-0.5 bg-gray-100">
+                      <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-emerald-900">
                         {it.status}
                       </span>
                     </td>
@@ -319,7 +319,7 @@ export default function AdminListingRequestsPage() {
         </div>
 
         {/* RIGHT: detail + photos + decision */}
-        <div className="border rounded-xl p-4 min-h-[320px]">
+        <div className="min-w-0 rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
           {!selectedRow && (
             <div className="h-full flex items-center justify-center text-sm text-gray-500">
               Select a listing to review.
@@ -361,7 +361,7 @@ export default function AdminListingRequestsPage() {
               {Object.keys(photoUrls).length > 0 && (
                 <div>
                   <div className="text-sm font-medium mb-2">Photos</div>
-                  <div className="grid grid-cols-3 gap-3">
+<div className="grid grid-cols-3 gap-3">
                     {Object.entries(photoUrls).map(([label, url]) => (
                       <button
                         key={label}
@@ -524,7 +524,7 @@ export default function AdminListingRequestsPage() {
 
                   <button
                     type="button"
-                    className="px-3 py-1.5 rounded border border-red-500 text-red-600 text-xs"
+                    className="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
                     onClick={handleReject}
                     disabled={decisionLoading}
                   >
@@ -533,7 +533,7 @@ export default function AdminListingRequestsPage() {
 
                   <button
                     type="button"
-                    className="px-3 py-1.5 rounded bg-emerald-600 text-white text-xs"
+                    className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
                     onClick={handleApprove}
                     disabled={decisionLoading}
                   >
@@ -549,11 +549,11 @@ export default function AdminListingRequestsPage() {
       {/* Photo zoom modal */}
       {activePhoto && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl max-w-5xl max-h-[90vh] p-4 flex flex-col">
+          <div className="max-w-5xl max-h-[90vh] rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg flex flex-col">
             <div className="flex justify-between items-center mb-2">
               <span className="font-semibold text-sm">Photo preview</span>
               <button
-                className="text-sm"
+                className="rounded-lg border border-emerald-200 bg-white px-2 py-1 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
                 onClick={() => setActivePhoto(null)}
               >
                 ✕
@@ -571,7 +571,7 @@ export default function AdminListingRequestsPage() {
                 href={activePhoto}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline"
+                className="text-emerald-700 underline hover:text-emerald-800"
               >
                 Open in new tab
               </a>

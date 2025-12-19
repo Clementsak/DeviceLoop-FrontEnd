@@ -205,6 +205,14 @@ export default function Home() {
                     Verify buyer account
                   </Link>
                 </div>
+                <div className="mt-3">
+                  <Link
+                    to="/verify/seller"
+                    className="inline-flex rounded-xl bg-forest-700 px-4 py-2 text-white hover:bg-forest-600"
+                  >
+                    Register seller account
+                  </Link>
+                </div>
               </div>
             ) : null}
 

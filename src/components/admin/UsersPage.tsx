@@ -46,7 +46,7 @@ export default function UsersPage() {
       {/* Filters */}
       <div className="grid md:grid-cols-5 gap-3">
         <input
-  className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 md:col-span-2"
+          className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 md:col-span-2"
           placeholder="Search USER#001 or email"
           value={q} onChange={e => setQ(e.target.value)}
         />
@@ -65,14 +65,14 @@ export default function UsersPage() {
         </select>
         <select className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-slate-900"
           value={limit} onChange={e => setLimit(parseInt(e.target.value))}>
-          {[10,25,50,100].map(n => <option key={n} value={n}>{n}/page</option>)}
+          {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}/page</option>)}
         </select>
       </div>
 
       {/* Table */}
-<div className="rounded-2xl border border-emerald-100 bg-white/80 overflow-x-auto">
+      <div className="overflow-x-auto rounded-2xl border border-emerald-100 bg-white shadow-sm">
         <table className="min-w-[900px] w-full text-sm text-slate-900">
-          <thead className="bg-white/5">
+          <thead className="bg-emerald-50">
             <tr className="text-left">
               <th className="p-3 w-[160px]">UserID</th>
               <th className="p-3">Email</th>
@@ -121,31 +121,36 @@ export default function UsersPage() {
         </div>
         <div className="flex gap-2">
           <button
-            className="px-3 py-1 rounded bg-white/10 disabled:opacity-50"
+            className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
             disabled={!canPrev}
             onClick={() => fetchPage(null)}
             title="Back to first page"
-          >Reset</button>
+          >
+            Reset
+          </button>
+
           <button
-            className="px-3 py-1 rounded bg-white/10 disabled:opacity-50"
+            className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
             disabled={!canNext}
             onClick={() => fetchPage(nextCursor!)}
-          >Next</button>
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-function RolePicker({ role, onChange }: { role: Role; onChange: (r: "buyers"|"sellers") => void }) {
+function RolePicker({ role, onChange }: { role: Role; onChange: (r: "buyers" | "sellers") => void }) {
   return (
     <div className="inline-flex items-center gap-2">
-      <span className="px-2 py-1 rounded bg-white/10">{role}</span>
+      <span className="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-900">{role}</span>
       {(role === "buyers" || role === "sellers") && (
         <select
-          className="rounded bg-white/10 px-2 py-1"
+          className="rounded-lg border border-emerald-200 bg-white px-2 py-1 text-sm text-slate-900"
           value={role}
-          onChange={e => onChange(e.target.value as "buyers"|"sellers")}
+          onChange={e => onChange(e.target.value as "buyers" | "sellers")}
         >
           <option value="buyers">buyers</option>
           <option value="sellers">sellers</option>
@@ -159,6 +164,6 @@ function StatusPill({ status }: { status: Verified }) {
   const base = "px-2 py-1 rounded text-xs";
   const cls =
     status === "verified" ? "bg-emerald-700" :
-    status === "rejected" ? "bg-red-700" : "bg-yellow-700";
+      status === "rejected" ? "bg-red-700" : "bg-yellow-700";
   return <span className={`${base} ${cls}`}>{status}</span>;
 }
