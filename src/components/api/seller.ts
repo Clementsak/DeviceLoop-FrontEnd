@@ -108,7 +108,7 @@ export async function signUploadUrl(
   // IMPORTANT:
   // Your backend route (files_routes.py) is "/sign-put" (NOT "/seller/sign-put")
   const { url } = await api_post<{ url: string }>(
-    "/file/sign-put",
+    "/files/sign-put",
     { key, type }
   );
 
