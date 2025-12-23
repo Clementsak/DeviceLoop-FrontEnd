@@ -68,9 +68,12 @@ export type SignedUpload = {
   uploadUrl?: string;
 };
 
-type SignUploadArgs =
-  | { key: string; contentType: string }
-  | { filename: string; contentType: string; prefix: string };
+export type SignUploadArgs = {
+  filename: string;
+  contentType: string;
+  prefix: string;
+};
+
 
 function sanitizeFilename(name: string) {
   // keep it simple and safe for keys
