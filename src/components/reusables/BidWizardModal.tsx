@@ -388,7 +388,6 @@ export function BidWizardModal({
 
 
     const midpoint = (min + max) / 2;
-    let isBuyout = false;
     let blockingError: string | null = null;
 
     if (midpoint < platformMin) {
@@ -399,7 +398,6 @@ export function BidWizardModal({
       )}). Please increase your range.`;
     } else if (midpoint > platformMax) {
       // Treat as buy-out: we will clamp final bid to platform maximum.
-      isBuyout = true;
     }
 
     const parsedFinal = finalBid.trim() === "" ? midpoint : Number(finalBid);

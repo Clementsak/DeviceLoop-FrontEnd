@@ -1,0 +1,13 @@
+version: 0.0
+os: linux
+
+files:
+  - source: dist/
+    destination: /var/www/deviceloop-frontend
+    overwrite: true
+
+hooks:
+  AfterInstall:
+    - location: scripts/reload-nginx.sh
+      timeout: 60
+      runas: root
