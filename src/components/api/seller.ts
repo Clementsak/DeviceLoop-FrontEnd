@@ -62,20 +62,48 @@ export async function fetchDeviceOptions(): Promise<DeviceOption[]> {
 }
 
 export type SignedUpload = {
-  uploadUrl: string;
+  url: string;
+  key: string;
+  // Backward compatibility for older code that used { uploadUrl }
+  uploadUrl?: string;
 };
 
-export async function signUploadUrl(
-  key: string,
-  contentType: string
-): Promise<SignedUpload> {
-  const res = await api_post<{ url: string }>("/files/sign-put", {
-    key,
-    type: contentType,
-  });
+type SignUploadArgs =
+  | { key: string; contentType: string }
+  | { filename: string; contentType: string; prefix: string };
+
+function sanitizeFilename(name: string) {
+  // keep it simple and safe for keys
+  return name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "");
+}
+function buildObjectKey(prefix: string, filename: string) {
+  const safe = sanitizeFilename(filename);
+  const ts = Date.now();
+  return `${prefix}/${ts}-${safe}`;
+}
+
+export async function signUploadUrl(arg1: string, arg2: string): Promise<SignedUpload>;
+export async function signUploadUrl(args: { filename: string; contentType: string; prefix: string }): Promise<SignedUpload>;
+export async function signUploadUrl(a: any, b?: any): Promise<SignedUpload> {
+  let key: string;
+  let contentType: string;
+
+  // Old usage: signUploadUrl(key, contentType)
+  if (typeof a === "string") {
+    key = a;
+    contentType = b ?? "application/octet-stream";
+  } else {
+    // New usage: signUploadUrl({ filename, contentType, prefix })
+    contentType = a.contentType ?? "application/octet-stream";
+    key = buildObjectKey(a.prefix, a.filename);
+  }
+
+  const res = await api_post<{ url: string }>(`/seller/sign-put`, { key, contentType });
 
   return {
-    uploadUrl: res.url,
+    url: res.url,
+    key,
+    uploadUrl: res.url, // backward compatible alias
   };
 }
 

@@ -85,7 +85,7 @@ export default function AdminPricesPage() {
         a.href = url;
         a.download = name;
         a.click();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     const exportParams = useMemo(

@@ -67,7 +67,7 @@ export default function AdminDevicesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url; a.download = name; a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   const exportParams = useMemo(() => ({ category, brand: brand || undefined, q: q || undefined, active }), [category, brand, q, active]);

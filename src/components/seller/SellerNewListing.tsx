@@ -239,44 +239,63 @@ export function SellerNewListing({ onCreated, onClose }: Props) {
     setError(null);
     return true;
   }
+  function fileToDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error ?? new Error("Failed to read file"));
+      reader.readAsDataURL(file); // produces data:image/...;base64,...
+    });
+  }
 
   // ---- Photo upload handler (includes preview) ----
-  async function handlePhotoChange(slot: PhotoSlot, file?: File) {
+  const handlePhotoChange = async (slot: PhotoSlot, file?: File) => {
     if (!file) return;
-
-    const contentType = file.type || "image/jpeg";
-    const ext = file.name.split(".").pop() || "jpg";
-    const key = `listings/${crypto.randomUUID()}-${slot}.${ext}`;
 
     setLoading(true);
     setError(null);
-    try {
-      // signUploadUrl returns { uploadUrl, publicUrl }
-      const { uploadUrl } = await signUploadUrl(key, contentType);
 
-      await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": contentType },
-        body: file,
-      });
+    void (async () => {
+      try {
+        const contentType = file.type || "application/octet-stream";
 
-      const previewUrl = URL.createObjectURL(file);
-
-      setPhotos(prev => {
-        const oldUrl = prev[slot].previewUrl;
-        if (oldUrl) URL.revokeObjectURL(oldUrl);
-        return {
+        // 1) Make preview first (data: URL -> works with your CSP)
+        const previewUrl = await fileToDataUrl(file);
+        setPhotos((prev) => ({
           ...prev,
-          [slot]: { file, s3Key: key, previewUrl },
-        };
-      });
-    } catch (err) {
-      console.error(err);
-      setError("Failed to upload image. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
+          [slot]: { ...prev[slot], file, previewUrl },
+        }));
+
+        // 2) Upload to S3 using presigned PUT
+        const { url, key } = await signUploadUrl({
+          filename: file.name,
+          contentType,
+          prefix: `listings/${slot}`,
+        });
+
+        const putRes = await fetch(url, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": contentType },
+        });
+
+        if (!putRes.ok) {
+          throw new Error(`Upload failed: ${putRes.status} ${putRes.statusText}`);
+        }
+
+        // 3) Save the S3 key so Step 2 validation + submit can use it
+        setPhotos((prev) => ({
+          ...prev,
+          [slot]: { ...prev[slot], s3Key: key },
+        }));
+      } catch (e: any) {
+        setError(e?.message || "Upload failed");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  };
+
 
   async function handleSubmit() {
     if (!validateStep1() || !validateStep2()) return;
@@ -436,9 +455,8 @@ function StepBadge({ active, children }: { active: boolean; children: ReactNode 
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
-          active ? "bg-emerald-600 text-white" : "bg-gray-200 text-gray-600"
-        }`}
+        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${active ? "bg-emerald-600 text-white" : "bg-gray-200 text-gray-600"
+          }`}
       >
         {active ? "●" : "○"}
       </div>
@@ -613,7 +631,7 @@ function StepDeviceDetails(props: {
 
 function StepPhotos(props: {
   photos: Record<PhotoSlot, PhotoState>;
-  onChange: (slot: PhotoSlot, file?: File) => void;
+  onChange: (slot: PhotoSlot, file: File | undefined) => void | Promise<void>;
   loading: boolean;
 }) {
   const { photos, onChange, loading } = props;
@@ -667,7 +685,7 @@ function StepPhotos(props: {
                 accept="image/*"
                 className="hidden"
                 disabled={loading}
-                onChange={e => onChange(slot, e.target.files?.[0])}
+                onChange={(e) => { void onChange(slot, e.target.files?.[0]); }}
               />
               <div className="mt-2 text-xs text-gray-500">
                 {state.s3Key ? "Uploaded" : "No file"}
@@ -723,22 +741,20 @@ function StepQuestions(props: {
           <button
             type="button"
             onClick={() => update("freeOfLocks", true)}
-            className={`rounded-full px-4 py-2 ${
-              questionnaire.freeOfLocks
-                ? "bg-emerald-600 text-white"
-                : "border border-gray-300 text-gray-700"
-            }`}
+            className={`rounded-full px-4 py-2 ${questionnaire.freeOfLocks
+              ? "bg-emerald-600 text-white"
+              : "border border-gray-300 text-gray-700"
+              }`}
           >
             Yes
           </button>
           <button
             type="button"
             onClick={() => update("freeOfLocks", false)}
-            className={`rounded-full px-4 py-2 ${
-              !questionnaire.freeOfLocks
-                ? "bg-emerald-600 text-white"
-                : "border border-gray-300 text-gray-700"
-            }`}
+            className={`rounded-full px-4 py-2 ${!questionnaire.freeOfLocks
+              ? "bg-emerald-600 text-white"
+              : "border border-gray-300 text-gray-700"
+              }`}
           >
             No
           </button>
@@ -763,11 +779,10 @@ function StepQuestions(props: {
               onClick={() =>
                 update("screenCondition", value as QuestionnairePayload["screenCondition"])
               }
-              className={`rounded-full px-4 py-2 ${
-                questionnaire.screenCondition === value
-                  ? "bg-emerald-600 text-white"
-                  : "border border-gray-300 text-gray-700"
-              }`}
+              className={`rounded-full px-4 py-2 ${questionnaire.screenCondition === value
+                ? "bg-emerald-600 text-white"
+                : "border border-gray-300 text-gray-700"
+                }`}
             >
               {label}
             </button>
@@ -794,11 +809,10 @@ function StepQuestions(props: {
               onClick={() =>
                 update("bodyCondition", value as QuestionnairePayload["bodyCondition"])
               }
-              className={`rounded-full px-4 py-2 ${
-                questionnaire.bodyCondition === value
-                  ? "bg-emerald-600 text-white"
-                  : "border border-gray-300 text-gray-700"
-              }`}
+              className={`rounded-full px-4 py-2 ${questionnaire.bodyCondition === value
+                ? "bg-emerald-600 text-white"
+                : "border border-gray-300 text-gray-700"
+                }`}
             >
               {label}
             </button>
@@ -815,22 +829,20 @@ function StepQuestions(props: {
           <button
             type="button"
             onClick={() => update("biometric", "yes")}
-            className={`rounded-full px-4 py-2 ${
-              questionnaire.biometric === "yes"
-                ? "bg-emerald-600 text-white"
-                : "border border-gray-300 text-gray-700"
-            }`}
+            className={`rounded-full px-4 py-2 ${questionnaire.biometric === "yes"
+              ? "bg-emerald-600 text-white"
+              : "border border-gray-300 text-gray-700"
+              }`}
           >
             Yes
           </button>
           <button
             type="button"
             onClick={() => update("biometric", "no")}
-            className={`rounded-full px-4 py-2 ${
-              questionnaire.biometric === "no"
-                ? "bg-emerald-600 text-white"
-                : "border border-gray-300 text-gray-700"
-            }`}
+            className={`rounded-full px-4 py-2 ${questionnaire.biometric === "no"
+              ? "bg-emerald-600 text-white"
+              : "border border-gray-300 text-gray-700"
+              }`}
           >
             No
           </button>
@@ -847,33 +859,30 @@ function StepQuestions(props: {
           <button
             type="button"
             onClick={() => update("coreFunctions", "ok")}
-            className={`rounded-full px-4 py-2 ${
-              questionnaire.coreFunctions === "ok"
-                ? "bg-emerald-600 text-white"
-                : "border border-gray-300 text-gray-700"
-            }`}
+            className={`rounded-full px-4 py-2 ${questionnaire.coreFunctions === "ok"
+              ? "bg-emerald-600 text-white"
+              : "border border-gray-300 text-gray-700"
+              }`}
           >
             Yes, everything is working
           </button>
           <button
             type="button"
             onClick={() => update("coreFunctions", "some_issues")}
-            className={`rounded-full px-4 py-2 ${
-              questionnaire.coreFunctions === "some_issues"
-                ? "bg-emerald-600 text-white"
-                : "border border-gray-300 text-gray-700"
-            }`}
+            className={`rounded-full px-4 py-2 ${questionnaire.coreFunctions === "some_issues"
+              ? "bg-emerald-600 text-white"
+              : "border border-gray-300 text-gray-700"
+              }`}
           >
             Some minor issues
           </button>
           <button
             type="button"
             onClick={() => update("coreFunctions", "major_issues")}
-            className={`rounded-full px-4 py-2 ${
-              questionnaire.coreFunctions === "major_issues"
-                ? "bg-emerald-600 text-white"
-                : "border border-gray-300 text-gray-700"
-            }`}
+            className={`rounded-full px-4 py-2 ${questionnaire.coreFunctions === "major_issues"
+              ? "bg-emerald-600 text-white"
+              : "border border-gray-300 text-gray-700"
+              }`}
           >
             Major issues
           </button>
@@ -896,11 +905,10 @@ function StepQuestions(props: {
               key={id}
               type="button"
               onClick={() => update("cameras", id as any)}
-              className={`rounded-full px-4 py-2 ${
-                questionnaire.cameras === id
-                  ? "bg-emerald-600 text-white"
-                  : "border border-gray-300 text-gray-700"
-              }`}
+              className={`rounded-full px-4 py-2 ${questionnaire.cameras === id
+                ? "bg-emerald-600 text-white"
+                : "border border-gray-300 text-gray-700"
+                }`}
             >
               {label}
             </button>
