@@ -61,53 +61,59 @@ export async function fetchDeviceOptions(): Promise<DeviceOption[]> {
   return res.items;        // <-- no .data here
 }
 
+// function sanitizeFilename(name: string) {
+//   // keep it simple and safe for keys
+//   return name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "");
+// }
+// function buildObjectKey(prefix: string, filename: string) {
+//   const safe = sanitizeFilename(filename);
+//   const ts = Date.now();
+//   return `${prefix}/${ts}-${safe}`;
+// }
+// src/components/api/seller.ts
+
 export type SignedUpload = {
   url: string;
   key: string;
-  // Backward compatibility for older code that used { uploadUrl }
-  uploadUrl?: string;
 };
 
 export type SignUploadArgs = {
   filename: string;
   contentType: string;
-  prefix: string;
+  prefix: string; // example: "listings/front"
 };
 
+// Overloads (now SignUploadArgs is USED, so noUnusedLocals stops failing)
+export async function signUploadUrl(args: SignUploadArgs): Promise<SignedUpload>;
+export async function signUploadUrl(key: string, contentType: string): Promise<SignedUpload>;
 
-function sanitizeFilename(name: string) {
-  // keep it simple and safe for keys
-  return name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "");
-}
-function buildObjectKey(prefix: string, filename: string) {
-  const safe = sanitizeFilename(filename);
-  const ts = Date.now();
-  return `${prefix}/${ts}-${safe}`;
-}
-
-export async function signUploadUrl(arg1: string, arg2: string): Promise<SignedUpload>;
-export async function signUploadUrl(args: { filename: string; contentType: string; prefix: string }): Promise<SignedUpload>;
-export async function signUploadUrl(a: any, b?: any): Promise<SignedUpload> {
+export async function signUploadUrl(
+  arg1: SignUploadArgs | string,
+  contentType?: string
+): Promise<SignedUpload> {
   let key: string;
-  let contentType: string;
+  let type: string;
 
-  // Old usage: signUploadUrl(key, contentType)
-  if (typeof a === "string") {
-    key = a;
-    contentType = b ?? "application/octet-stream";
+  if (typeof arg1 === "string") {
+    // Old-style call: signUploadUrl("some/key.jpg", "image/jpeg")
+    key = arg1;
+    type = contentType ?? "application/octet-stream";
   } else {
-    // New usage: signUploadUrl({ filename, contentType, prefix })
-    contentType = a.contentType ?? "application/octet-stream";
-    key = buildObjectKey(a.prefix, a.filename);
+    // New-style call: signUploadUrl({ filename, contentType, prefix })
+    const safeName = arg1.filename.replace(/[^\w.\-]+/g, "_");
+    key = `${arg1.prefix}/${crypto.randomUUID()}-${safeName}`;
+    type = arg1.contentType || "application/octet-stream";
   }
 
-  const res = await api_post<{ url: string }>(`/seller/sign-put`, { key, contentType });
+  // IMPORTANT:
+  // Your backend route (files_routes.py) is "/sign-put" (NOT "/seller/sign-put")
+  const { url } = await api_post<{ url: string }>(
+    "/sign-put",
+    { key, type }
+  );
 
-  return {
-    url: res.url,
-    key,
-    uploadUrl: res.url, // backward compatible alias
-  };
+  // Backend returns only { url }, so we return { url, key } for the frontend to save the key.
+  return { url, key };
 }
 
 export async function createListingRequest(
