@@ -30,7 +30,7 @@ export default function Home() {
       try {
         // Adjust endpoint if your home should call a different route.
         // This assumes buyer listings endpoint exists and returns items.
-        const res = await api.get("/buyer/listings?limit=8");
+        const res = await api.get("/buyer/listings?limit=30");
         const items = (res?.items ?? res?.data?.items ?? []) as any[];
 
         const toNum = (v: any): number | undefined => {
@@ -77,7 +77,7 @@ export default function Home() {
         // filter out broken ids
         const cleaned = normalized.filter((x) => !!x.listingId);
 
-        if (mounted) setListings(cleaned.slice(0, 8));
+        if (mounted) setListings(cleaned.slice(0, 30));
       } catch (e: any) {
         if (mounted) setErr("Could not load latest listings.");
       } finally {
