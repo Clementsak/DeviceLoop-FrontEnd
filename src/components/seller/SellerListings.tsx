@@ -5,7 +5,6 @@ import { Link , useNavigate} from "react-router-dom";
 const API_BASE = import.meta.env.VITE_API_BASE ?? "https://localhost:5000";
 
 type ListingStatus =
-  | "pending"
   | "unverified"
   | "verified"
   | "rejected"
@@ -299,7 +298,6 @@ return listings.filter(item => item.Status === "ended" && !!item.CurrentHighestB
     <option value="active">Active (ongoing)</option>
     <option value="matched">Matched</option>
     <option value="expired">Expired</option>
-    <option value="ended">Ended</option>
     <option value="all">All</option>
   </select>
 </div>
@@ -454,7 +452,6 @@ return listings.filter(item => item.Status === "ended" && !!item.CurrentHighestB
   value={requestFilter}
   onChange={(e) => setRequestFilter(e.target.value as any)}
 >
-  <option value="pending">Pending</option>
   <option value="unverified">Unverified</option>
   <option value="verified">Verified</option>
   <option value="rejected">Rejected</option>
