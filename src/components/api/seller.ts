@@ -138,6 +138,7 @@ export type SellerSummary = {
   listings_expired?: number;
   listings_matched?: number;
   requests_pending?: number;
+  pendingListings: number;
 };
 
 export type SellerOrdersPaymentFilter = "paid" | "pending" | "all";
