@@ -75,7 +75,7 @@ export function SellerListings() {
     navigate(`/listings/${encodeURIComponent(listingId)}`);
   };
   const [listingFilter, setListingFilter] = useState<"active" | "matched" | "expired" | "ended" | "all">("active");
-  const [requestFilter, setRequestFilter] = useState<"pending" | "unverified" | "verified" | "rejected" | "cancelled" | "all">("unverified");
+  const [requestFilter, setRequestFilter] = useState<"pending" | "unverified" | "verified" | "rejected" | "cancelled" | "all">("verified");
 
   const filteredRequests = requestFilter === "all"
     ? requests
