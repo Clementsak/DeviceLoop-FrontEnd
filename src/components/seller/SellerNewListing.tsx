@@ -769,7 +769,7 @@ function StepQuestions(props: {
         <div className="flex flex-wrap gap-3 text-sm">
           {[
             ["Flawless", "Flawless"],
-            ["2–3 minor scratches", "2–3 minor scratches"],
+            ["2–3 minor scratches", "minor scratches"],
             ["Heavy scratches", "Heavy scratches"],
             ["Cracked", "Cracked"],
           ].map(([value, label]) => (
@@ -798,7 +798,7 @@ function StepQuestions(props: {
         <div className="flex flex-wrap gap-3 text-sm">
           {[
             ["Flawless", "Flawless"],
-            ["2–3 minor scratches", "2–3 minor scratches"],
+            ["2–3 minor scratches", "minor scratches"],
             ["Heavy scratches", "Heavy scratches"],
             ["Dented", "Dented"],
             ["Cracked", "Cracked"],
