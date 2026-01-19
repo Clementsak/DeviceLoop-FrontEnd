@@ -5,7 +5,6 @@ import { Link , useNavigate} from "react-router-dom";
 const API_BASE = import.meta.env.VITE_API_BASE ?? "https://localhost:5000";
 
 type ListingStatus =
-  | "pending"
   | "unverified"
   | "verified"
   | "rejected"
@@ -76,7 +75,7 @@ const goToDetails = (listingId: string) => {
   navigate(`/listings/${encodeURIComponent(listingId)}`);
 };
   const [listingFilter, setListingFilter] = useState<"active" | "matched" | "expired" | "ended" | "all">("active");
-const [requestFilter, setRequestFilter] = useState<"pending" | "unverified" | "verified" | "rejected" | "cancelled" | "all">("unverified");
+const [requestFilter, setRequestFilter] = useState< "unverified" | "verified" | "rejected" | "cancelled" | "all">("unverified");
 
 const filteredRequests = requestFilter === "all"
   ? requests
@@ -379,7 +378,6 @@ return listings.filter(item => item.Status === "ended" && !!item.CurrentHighestB
   value={requestFilter}
   onChange={(e) => setRequestFilter(e.target.value as any)}
 >
-  <option value="pending">Pending</option>
   <option value="unverified">Unverified</option>
   <option value="verified">Verified</option>
   <option value="rejected">Rejected</option>

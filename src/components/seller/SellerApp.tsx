@@ -4,6 +4,7 @@ import { SellerDashboard } from "./SellerDashboard";
 import { SellerListings } from "./SellerListings";
 import { SellerNewListing } from "./SellerNewListing";
 import SellerOrders from "./SellerOrders";
+import { SellerSettings } from "./SellerSettings";
 
 export default function SellerApp() {
   return (
@@ -13,7 +14,6 @@ export default function SellerApp() {
           <SideLink to="/seller" end label="Dashboard" />
           <SideLink to="/seller/listings" label="My Listings" />
           <SideLink to="/seller/orders" label="Orders" />
-          <SideLink to="/seller/payouts" label="Payouts" />
           <SideLink to="/seller/settings" label="Store Settings" />
         </nav>
       </aside>
@@ -24,6 +24,7 @@ export default function SellerApp() {
           <Route path="listings" element={<SellerListings />} />
           <Route path="listings/new" element={<SellerNewListing  />} />
           <Route path="orders" element={<SellerOrders />} />
+          <Route path="settings" element={<SellerSettings />} />
         </Routes>
         <Outlet />
       </main>

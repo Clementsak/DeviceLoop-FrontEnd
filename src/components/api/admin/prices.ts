@@ -1,5 +1,5 @@
 // src/components/api/prices.ts
-const API_BASE = import.meta.env.VITE_API_BASE;
+const API_BASE = import.meta.env.VITE_API_BASE ?? "https://localhost:5000";
 
 export type PriceRow = {
   pk: string;

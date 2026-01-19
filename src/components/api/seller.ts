@@ -105,6 +105,7 @@ export type SellerSummary = {
 
 export type SellerOrdersPaymentFilter = "paid" | "pending" | "all";
 
+
 export type SellerOrderRow = {
   listingId: string;
   marketKey?: string;
@@ -125,9 +126,32 @@ export type SellerOrderRow = {
 
 type SellerOrdersResponse = { items: SellerOrderRow[] };
 
+export type SellerRegistrationProfile = {
+  organisationName?: string;
+  registrationNumber?: string;
+  businessEmail?: string;
+  businessPhone?: string;
+  registrationAddress?: string;
+  businessAddress?: string;
+};
+
+export type SellerSettingsResponse = {
+  ok: boolean;
+  profile: string;
+  settings: Record<string, unknown>;
+  sellerRegistration?: SellerRegistrationProfile | null;
+};
+
+export type SellerRegistrationProfileResponse = {
+  ok: boolean;
+  profile: SellerRegistrationProfile;
+};
+
 export const SellerAPI = {
   summary: () => api_get<SellerSummary>("/seller/summary"),
-
+getSettings: () => api_get<SellerSettingsResponse>("/seller/settings"),
+getRegistrationProfile: () =>
+    api_get<SellerRegistrationProfileResponse>("/seller/registration-profile"),
 
   getOrders: async (opts: {
     paymentStatus?: SellerOrdersPaymentFilter;
