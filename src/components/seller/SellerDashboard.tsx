@@ -104,7 +104,7 @@ export function SellerDashboard() {
           />
           <StatCard
             label="Pending listings"
-            value={data.pending_listings ?? 0}
+            value={data.listings_pending ?? 0}
             hint="Listings that are pending approval."
           /> 
         </div>
